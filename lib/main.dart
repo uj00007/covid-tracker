@@ -98,6 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
       initializationSettings,
     );
     _firebaseMessaging.subscribeToTopic('all');
+    _showNotification('fghcv', 'des');
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
         print("onMessage: $message");
@@ -142,7 +143,7 @@ class _MyHomePageState extends State<MyHomePage> {
       icon: '@mipmap/ic_launcher',
       importance: Importance.Max,
       priority: Priority.High,
-      sound: '',
+      sound: 'soundtone_notification',
       color: Color(0xfffc223c),
       playSound: true,
       enableVibration: true,
@@ -152,7 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
     var platformChannelSpecifics = new NotificationDetails(
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
     await _flutterLocalNotificationsPlugin.show(
-        1, title, subtitle, platformChannelSpecifics);
+        1, 'Hi', 'Hello', platformChannelSpecifics);
   }
 
   getToken() async {
