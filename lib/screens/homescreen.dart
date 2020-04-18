@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:covid_tracker/screens/drawer/drawer.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -131,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text('Covid Tracker'),
       ),
+      drawer: DrawerWidget(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
