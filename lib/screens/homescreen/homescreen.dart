@@ -1,15 +1,16 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:covid_tracker/colors/colors.dart';
 import 'package:covid_tracker/screens/drawer/drawer.dart';
+import 'package:covid_tracker/utils/location_package.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
-import 'dart:math';
-import 'package:fl_chart/fl_chart.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({Key key}) : super(key: key);
@@ -44,6 +45,12 @@ class _HomeScreenState extends State<HomeScreen> {
     print(_firebaseMessaging);
     notificationConfigurationSetter();
     setupdatabase();
+    startLocation();
+  }
+
+  void startLocation() async {
+    await LocationPackage()
+        .locationServiceStart({"email": "uj00007@gmail.com"});
   }
 
   void setupdatabase() async {
