@@ -1,0 +1,50 @@
+{
+  "admin": {
+    "drawer": [
+      {
+        "tile": "PROFILE",
+        "render_section": "DRAWER_SECTION"
+      },
+      {
+        "tile": "STATUS",
+        "render_section": "DRAWER_SECTION"
+      },
+      {
+        "tile": "USER_TRACKER",
+        "render_section": "DRAWER_SECTION"
+      },
+      {
+        "tile": "FAQ",
+        "render_section": "DRAWER_SECTION"
+      },
+      {
+        "tile": "HEALTH_CHECKER",
+        "render_section": "DRAWER_SECTION"
+      }
+    ]
+  },
+  "user": {
+    "drawer": [
+      {
+        "tile": "PROFILE",
+        "render_section": "DRAWER_SECTION"
+      },
+      {
+        "tile": "STATUS",
+        "render_section": "DRAWER_SECTION"
+      },
+      {
+        "tile": "TRACKER_HOME",
+        "render_section": "DRAWER_SECTION"
+      },
+      {
+        "tile": "FAQ",
+        "render_section": "DRAWER_SECTION"
+      },
+      {
+        "tile": "HEALTH_CHECKER",
+        "render_section": "DRAWER_SECTION"
+      }
+    ]
+  }
+}
