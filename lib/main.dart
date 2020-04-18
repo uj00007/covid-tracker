@@ -1,5 +1,4 @@
 import 'package:covid_tracker/routing/router.dart';
-import 'package:covid_tracker/screens/homescreen.dart';
 import 'package:flutter/material.dart';
 
 void main() {

@@ -1,5 +1,5 @@
 import 'package:covid_tracker/screens/admin_homescreen.dart';
-import 'package:covid_tracker/screens/homescreen.dart';
+import 'package:covid_tracker/screens/homescreen/homescreen.dart';
 import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
 
