@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:covid_tracker/routing/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,9 +21,12 @@ class _SplashScreenState extends State<SplashScreen> {
     //Return String
     String stringValue = prefs.getString('user');
     print(stringValue);
-    if (stringValue != null)
-      Navigator.of(context).pushNamed(Routes.homeScreenRoute);
-    else
+    if (stringValue != null) {
+      if (json.decode(stringValue)['is_admin'])
+        Navigator.of(context).pushNamed(Routes.adminHomeScreenRoute);
+      else
+        Navigator.of(context).pushNamed(Routes.homeScreenRoute);
+    } else
       Navigator.of(context).pushNamed(Routes.loginRoute);
   }
 

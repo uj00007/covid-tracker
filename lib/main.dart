@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       // theme: ThemeData(
       //   primarySwatch: Colors.blue,
       // ),
-      initialRoute: Routes.splashRoute,
+      initialRoute: Routes.adminHomeScreenRoute,
       onGenerateRoute: FluroRouter.router.generator,
       // home: MyHomePage(title: 'Flutter Demo Home Page'),
     );

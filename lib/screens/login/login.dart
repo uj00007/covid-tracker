@@ -187,7 +187,10 @@ class _LoginScreenState extends State<LoginScreen> {
       database.reference().child('users').set(usersUpdated);
     }
     addUserToStorage(temp.toJson(), temp.id);
-    Navigator.of(context).pushNamed(Routes.homeScreenRoute);
+    if (temp.isAdmin)
+      Navigator.of(context).pushNamed(Routes.adminHomeScreenRoute);
+    else
+      Navigator.of(context).pushNamed(Routes.homeScreenRoute);
   }
 
   @override
