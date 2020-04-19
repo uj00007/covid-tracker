@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 import 'dart:io';
 
@@ -8,9 +9,11 @@ import 'package:covid_tracker/components/custom_button.dart';
 import 'package:covid_tracker/models/user.dart';
 import 'package:covid_tracker/routing/routes.dart';
 import 'package:covid_tracker/screens/drawer/drawer.dart';
+import 'package:covid_tracker/utils/location_package.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
@@ -57,6 +60,11 @@ class _HomeScreenState extends State<HomeScreen> {
     getHotspotData().then((res) => setState(() {
           this.hotspotData = res;
         }));
+  }
+
+  void startLocation() async {
+    await LocationPackage()
+        .locationServiceStart({"email": "uj00007@gmail.com"});
   }
 
   Future<Map> getHotspotData() async {
@@ -196,6 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
       database.reference().child('users/${user.id}/location').set(
           {'latitude': position.latitude, 'longitude': position.longitude});
       _calculateNearestHotspots();
+      startLocation();
     }).catchError((e) {
       print(e);
     });
