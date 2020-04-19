@@ -15,11 +15,19 @@ class Hotspot {
     this.name,
   });
 
-  factory Hotspot.fromJson(Map<String, dynamic> json) => Hotspot(
-        cases: validateMapKey('cases', json) ? json["cases"] : 0,
-        lat: validateMapKey('lat', json) ? json["lat"].toDouble() : 0.0,
-        lng: validateMapKey('lng', json) ? json["lng"].toDouble() : 0.0,
-        radius: validateMapKey('radius', json) ? json["radius"] : 1,
+  factory Hotspot.fromJson(Map<dynamic, dynamic> json) => Hotspot(
+        cases: validateMapKey('cases', json)
+            ? int.parse(json["cases"].toString())
+            : 0,
+        lat: validateMapKey('lat', json)
+            ? double.parse(json["lat"].toString())
+            : 0.0,
+        lng: validateMapKey('lng', json)
+            ? double.parse(json["lng"].toString())
+            : 0.0,
+        radius: validateMapKey('radius', json)
+            ? int.parse(json["radius"].toString())
+            : 1,
         name: validateMapKey('name', json) ? json["name"] : '',
       );
 
