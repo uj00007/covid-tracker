@@ -1,3 +1,4 @@
+import 'package:covid_tracker/routing/routes.dart';
 import 'package:covid_tracker/screens/drawer/drawer.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -36,7 +37,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   getUsers() {
     this.setState(() {
       this.isLoading = true;
-      ;
     });
     database.reference().child('users').once().then((DataSnapshot snapshot) {
       // print('value ${snapshot.value}');
@@ -54,51 +54,56 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     for (int i = 0; i < this.users.length; i++) {
       widgets.add(Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Card(
-            color: this.users[i]["is_safe"] ? Colors.green : Colors.red,
-            child: Container(
-                height: 100,
-                padding: EdgeInsets.all(16),
-                width: MediaQuery.of(context).size.width,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Text(users[i]["name"],
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                letterSpacing: 1,
-                                fontWeight: FontWeight.w600)),
-                        Text('Mob: ${users[i]["mobile_number"]}',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                letterSpacing: 1,
-                                fontWeight: FontWeight.normal)),
-                        Text(users[i]["email_id"],
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                letterSpacing: 1,
-                                fontWeight: FontWeight.normal)),
-                      ],
-                    ),
-                    Container(
-                        child: Text(
-                      this.users[i]["is_safe"] ? 'SAFE' : 'UNSAFE!!',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 30,
-                          letterSpacing: 1,
-                          fontWeight: FontWeight.w600),
-                    ))
-                  ],
-                ))),
+        child: InkWell(
+          onTap: () => Navigator.of(context).pushNamed(
+              '${Routes.viewContactPersons}/${i}',
+              arguments: {"userId": i}),
+          child: Card(
+              color: this.users[i]["is_safe"] ? Colors.green : Colors.red,
+              child: Container(
+                  // height: 100,
+                  padding: EdgeInsets.all(16),
+                  width: MediaQuery.of(context).size.width,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Text(users[i]["name"],
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  letterSpacing: 1,
+                                  fontWeight: FontWeight.w600)),
+                          Text('Mob: ${users[i]["mobile_number"]}',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  letterSpacing: 1,
+                                  fontWeight: FontWeight.normal)),
+                          Text(users[i]["email_id"],
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  letterSpacing: 1,
+                                  fontWeight: FontWeight.normal)),
+                        ],
+                      ),
+                      Container(
+                          child: Text(
+                        this.users[i]["is_safe"] ? 'SAFE' : 'UNSAFE!!',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 30,
+                            letterSpacing: 1,
+                            fontWeight: FontWeight.w600),
+                      ))
+                    ],
+                  ))),
+        ),
       ));
     }
 
@@ -138,7 +143,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       appBar: AppBar(
         backgroundColor: Color(0xff2c4260),
         elevation: 0.0,
-        title: Text('Covid Tracker'),
+        title: Text('Covid Tracker - Admin'),
       ),
       drawer: DrawerWidget(),
       backgroundColor: Color(0xff2c4260),

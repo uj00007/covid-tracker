@@ -6,4 +6,5 @@ class Routes {
   static final String faqScreenRoute = 'faq';
   static final String healthCheckerScreenRoute = 'heathchecker';
   static final String addContactPersonRoute = 'addcontactperson';
+  static final String viewContactPersons = 'viewcontactpersons';
 }

@@ -84,7 +84,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
           .set(incontactuser.toJson());
     }
     final snackBar = SnackBar(
-      content: Text('Updated SuccessFully!!, thanks for info..'),
+      content: Text('Updated SuccessFully!!, thanks for info.'),
       backgroundColor: CommonColors.green,
     );
     _scaffoldKey.currentState.showSnackBar(snackBar);

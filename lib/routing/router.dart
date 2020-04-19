@@ -1,4 +1,5 @@
 import 'package:covid_tracker/routing/routes.dart';
+import 'package:covid_tracker/screens/ViewContactPerson/view_contact_persons.dart';
 import 'package:covid_tracker/screens/addContact/add_contact.dart';
 import 'package:covid_tracker/screens/adminHomescreen/admin_homescreen.dart';
 import 'package:covid_tracker/screens/homescreen/homescreen.dart';
@@ -24,6 +25,12 @@ class FluroRouter {
   static Handler _addContactScreenHandler = Handler(
       handlerFunc: (BuildContext context, Map<String, dynamic> params) =>
           AddContactScreen());
+  static Handler _viewContactPersonScreenHandler =
+      Handler(handlerFunc: (BuildContext context, Map<String, dynamic> params) {
+    return ViewContactPersonsScreen(
+      userId: params['id'][0],
+    );
+  });
 
   static void setupRouter() {
     router.define(
@@ -41,6 +48,10 @@ class FluroRouter {
     router.define(
       Routes.addContactPersonRoute,
       handler: _addContactScreenHandler,
+    );
+    router.define(
+      '${Routes.viewContactPersons}/:id',
+      handler: _viewContactPersonScreenHandler,
     );
     router.define(Routes.splashRoute, handler: _splashScreenHandler);
   }

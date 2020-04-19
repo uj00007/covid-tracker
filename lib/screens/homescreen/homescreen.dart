@@ -17,7 +17,7 @@ import 'package:geolocator/geolocator.dart';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
-
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -42,6 +42,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isProcessing = false;
   bool isSafe = true;
   User user;
+  RemoteConfig remoteConfig;
+  var hotspotData = {};
 
   @override
   void initState() {
@@ -51,6 +53,32 @@ class _HomeScreenState extends State<HomeScreen> {
     notificationConfigurationSetter();
     setupdatabase();
     getUser();
+    hotspotData = {'hotspots_distance': 50, 'hotspot_alert_distance': 10};
+    getHotspotData().then((res) => setState(() {
+          this.hotspotData = res;
+        }));
+  }
+
+  Future<Map> getHotspotData() async {
+    var hdistance;
+    var halertdistance;
+    remoteConfig = await RemoteConfig.instance;
+    try {
+      await remoteConfig.fetch(expiration: const Duration(hours: 0));
+      await remoteConfig.activateFetched();
+      hdistance = remoteConfig.getInt('hotspots_distance');
+      halertdistance = remoteConfig.getInt('hotspot_alert_distance');
+    } on FetchThrottledException catch (exception) {
+      // Fetch throttled.
+      print(exception);
+    } catch (exception) {
+      print('Unable to fetch remote config. Cached or default values will be '
+          'used');
+    }
+    return {
+      'hotspots_distance': hdistance,
+      'hotspot_alert_distance': halertdistance
+    };
   }
 
   void setupdatabase() async {
@@ -165,6 +193,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _currentPosition = position;
       });
       print(_currentPosition);
+      database.reference().child('users/${user.id}/location').set(
+          {'latitude': position.latitude, 'longitude': position.longitude});
       _calculateNearestHotspots();
     }).catchError((e) {
       print(e);
@@ -180,6 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   _calculateNearestHotspots() {
     print('calculating nearby');
+    print(this.hotspotData);
     nearestHotspot = null;
 
     if (hotspots.isNotEmpty) {
@@ -190,16 +221,28 @@ class _HomeScreenState extends State<HomeScreen> {
             _currentPosition.latitude,
             _currentPosition.longitude);
         // print(dist);
-        if ((dist - double.parse(hotspot["radius"])) < 200) {
+        if ((dist - double.parse(hotspot["radius"])) <
+            this.hotspotData['hotspots_distance']) {
           hotspot["distance"] =
               (dist - double.parse(hotspot["radius"])).toStringAsFixed(3);
           nearesthotspots.add(hotspot);
-          if ((dist - double.parse(hotspot["radius"])) < 100) {
-            nearestHotspot = hotspot;
-          }
         }
       });
     }
+    nearesthotspots.sort((a, b) => a['distance'].compareTo(b['distance']));
+    print('Sort by Age: ' + nearesthotspots.toString());
+    if (nearesthotspots != null && nearesthotspots.length > 0) {
+      nearesthotspots = nearesthotspots.sublist(
+          0, nearesthotspots.length >= 5 ? 5 : nearesthotspots.length);
+    }
+
+    for (var hotspot in nearesthotspots) {
+      if (double.parse(hotspot['distance']) <
+          this.hotspotData['hotspot_alert_distance']) {
+        nearestHotspot = hotspot;
+      }
+    }
+
     // print(nearesthotspots);
     print('nearest ${nearestHotspot}');
     if (nearestHotspot != null) {
@@ -331,6 +374,36 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  List<Widget> displaygraphData() {
+    List<Widget> wid = [];
+    this.nearesthotspots.forEach((hotspot) {
+      wid.add(Container(
+        padding: EdgeInsets.only(right: 8),
+        child: Column(
+          children: <Widget>[
+            Text(hotspot['name'],
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12)),
+            Text('cases: ${hotspot['cases']}',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12)),
+            Text('dist: ${double.parse(hotspot['distance']).floor()}km',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12)),
+          ],
+        ),
+      ));
+    });
+
+    return wid;
+  }
+
   @override
   Widget build(BuildContext context) {
     print(MediaQuery.of(context).size.width);
@@ -365,122 +438,149 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       drawer: DrawerWidget(),
       backgroundColor: Color(0xff2c4260),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              !this.isSafe
-                  ? Container(
-                      // color: Colors.red,
-                      height: 100,
-                      width: MediaQuery.of(context).size.width,
-                      child: Card(
-                        color: Colors.red,
-                        elevation: 1.0,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: <Widget>[
-                            Text("ALERT!!",
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 30,
-                                    letterSpacing: 5,
-                                    fontWeight: FontWeight.w700)),
-                            Text("You are inside a hotspot zone",
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    letterSpacing: 2,
-                                    fontWeight: FontWeight.w700)),
-                          ],
-                        ),
-                      ),
-                    )
-                  : SizedBox(),
-              !this.isProcessing &&
-                      this.nearesthotspots != null &&
-                      this.nearesthotspots.length != 0
-                  ? Column(
-                      children: <Widget>[
-                        BarChartSample2(nearesthotspots: this.nearesthotspots),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Container(
-                            child: Row(
+      body: Container(
+        child: SingleChildScrollView(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  !this.isSafe
+                      ? Container(
+                          // color: Colors.red,
+                          height: 100,
+                          width: MediaQuery.of(context).size.width,
+                          child: Card(
+                            color: Colors.red,
+                            elevation: 1.0,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: <Widget>[
-                                Container(
-                                  height: 25,
-                                  width: 25,
-                                  color: Color(0xff53fdd7),
-                                ),
-                                Text(
-                                  '-  Represents cases..',
-                                  style: TextStyle(
-                                      color: const Color(0xff7589a2),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14),
-                                )
-                              ],
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Container(
-                            child: Row(
-                              children: <Widget>[
-                                Container(
-                                  height: 25,
-                                  width: 25,
-                                  color: Color(0xffff5182),
-                                ),
-                                Text(
-                                  '-  Represents proximity distance to hotspot..',
-                                  style: TextStyle(
-                                      color: const Color(0xff7589a2),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14),
-                                )
+                                Text("ALERT!!",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 30,
+                                        letterSpacing: 5,
+                                        fontWeight: FontWeight.w700)),
+                                Text("You are inside a hotspot zone",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        letterSpacing: 2,
+                                        fontWeight: FontWeight.w700)),
                               ],
                             ),
                           ),
                         )
-                      ],
-                    )
-                  : SizedBox(),
-              !this.isProcessing
-                  ? Icon(
-                      Icons.location_on,
-                      color: CommonColors.softRed,
-                      size: 40,
-                    )
-                  : CircularProgressIndicator(),
-              (!this.isProcessing &&
-                      this.nearesthotspots != null &&
-                      this.nearesthotspots.length == 0)
-                  ? FlatButton(
-                      child: Text("Get Hotspots"),
-                      onPressed: () {
-                        // Get location here
-                        // setState(() {
-                        //   nearesthotspots = [];
-                        //   hotspots = [];
-                        // });
+                      : SizedBox(),
+                  !this.isProcessing &&
+                          this.nearesthotspots != null &&
+                          this.nearesthotspots.length != 0
+                      ? Column(
+                          children: <Widget>[
+                            BarChartSample2(
+                                nearesthotspots: this.nearesthotspots),
+                            this.nearesthotspots != null &&
+                                    this.nearesthotspots.length > 0
+                                ? Container(
+                                    padding: EdgeInsets.only(left: 44),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: <Widget>[...displaygraphData()],
+                                    ),
+                                  )
+                                : SizedBox(),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Container(
+                                child: Row(
+                                  children: <Widget>[
+                                    Container(
+                                      height: 25,
+                                      width: 25,
+                                      color: Color(0xff53fdd7),
+                                    ),
+                                    Text(
+                                      '-  Represents cases..',
+                                      style: TextStyle(
+                                          color: const Color(0xff7589a2),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Container(
+                                child: Row(
+                                  children: <Widget>[
+                                    Container(
+                                      height: 25,
+                                      width: 25,
+                                      color: Color(0xffff5182),
+                                    ),
+                                    Text(
+                                      '-  Represents proximity distance to hotspot..',
+                                      style: TextStyle(
+                                          color: const Color(0xff7589a2),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            )
+                          ],
+                        )
+                      : SizedBox(),
+                  !this.isProcessing
+                      ? Icon(
+                          Icons.location_on,
+                          color: CommonColors.softRed,
+                          size: 40,
+                        )
+                      : CircularProgressIndicator(),
+                  (!this.isProcessing &&
+                          this.nearesthotspots != null &&
+                          this.nearesthotspots.length == 0)
+                      ? FlatButton(
+                          child: Text("Get Hotspots",
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 20)),
+                          onPressed: () {
+                            // Get location here
+                            // setState(() {
+                            //   nearesthotspots = [];
+                            //   hotspots = [];
+                            // });
 
-                        _getCurrentLocation();
-                      },
-                    )
-                  : SizedBox(),
-              _currentPosition != null
-                  ? Text(
-                      '${_currentPosition.latitude.toString()} ,${_currentPosition.longitude.toString()}',
-                      style: TextStyle(color: Color(0xffff5182)),
-                    )
-                  : SizedBox(),
-            ],
+                            _getCurrentLocation();
+                          },
+                        )
+                      : SizedBox(),
+                  _currentPosition != null
+                      ? Text(
+                          '${_currentPosition.latitude.toString()} ,${_currentPosition.longitude.toString()}',
+                          style: TextStyle(color: Color(0xffff5182)),
+                        )
+                      : SizedBox(),
+                  this.nearesthotspots == null ||
+                          this.nearesthotspots.length == 0
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 24.0),
+                          child: Text('No Hotspots Nearby',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 30)),
+                        )
+                      : SizedBox()
+                ],
+              ),
+            ),
           ),
         ),
       ),

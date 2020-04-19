@@ -26,7 +26,11 @@ class BarChartSample2State extends State<BarChartSample2> {
     List<BarChartGroupData> bargrps = [];
     widget.nearesthotspots.forEach((data) {
       print(data);
-      var temp = makeGroupData(0, double.parse(data["cases"]) / 10,
+      var temp = makeGroupData(
+          0,
+          (double.parse(data["cases"]) / 10) > 20
+              ? 20.0
+              : double.parse(data["cases"]) / 10,
           20 - double.parse(data["distance"]) / 10);
       bargrps.add(temp);
     });
