@@ -76,6 +76,8 @@ public class LocationPackagePlugin implements FlutterPlugin, MethodChannel.Metho
     private Intent getIntentWithExtras(Map locationServiceData) {
         Intent intent = new Intent(MainActivity.activity, LocationService.class);
         intent.putExtra("email", "" + locationServiceData.get("email"));
+        intent.putExtra("id", "" + locationServiceData.get("id"));
+
         intent.setAction("start");
         return intent;
     }

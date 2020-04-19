@@ -90,6 +90,7 @@ public class LocationService extends Service {
     private long locationUpdatedAt = Long.MIN_VALUE;
 
     String email="";
+    String id="";
 
     static void startService(Context context, String message) {
         Intent startIntent = new Intent(context, LocationService.class);
@@ -195,6 +196,8 @@ public class LocationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("Service", "onStartCommand");
         email = intent.getExtras().getString("email");
+        id = intent.getExtras().getString("id");
+
 
         startForeground(NOTIFICATION_ID, getNotification(getLocationText(mLocation)));
         try {
@@ -291,6 +294,8 @@ public class LocationService extends Service {
                 locationUploadRequest.addProperty("lat", mLocation.getLatitude());
                 locationUploadRequest.addProperty("long", mLocation.getLongitude());
                 locationUploadRequest.addProperty("email", email);
+                locationUploadRequest.addProperty("id", id);
+
                 NetworkServicesImpl.getInstance().sendLocation("application/json",  locationUploadRequest, new Callback<JsonObject>() {
                             @Override
                             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {

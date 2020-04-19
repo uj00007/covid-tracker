@@ -3,6 +3,7 @@ import 'package:covid_tracker/screens/drawer/drawer.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   AdminHomeScreen({Key key}) : super(key: key);
@@ -112,49 +113,53 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: Container(
-        // alignment: Alignment.center,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            InkWell(
-              onTap: () => this.getUsers(),
-              child: Stack(children: <Widget>[
-                FloatingActionButton(
-                  onPressed: () => this.getUsers(),
-                  backgroundColor: Colors.red,
-                ),
-                Container(
-                    height: 60,
-                    width: 50,
-                    // color: Colors.red,
-                    child: Icon(
-                      Icons.refresh,
-                      size: 30,
-                      color: Colors.white,
-                    )),
-              ]),
-            ),
-          ],
-        ),
-      ),
-      appBar: AppBar(
-        backgroundColor: Color(0xff2c4260),
-        elevation: 0.0,
-        title: Text('Covid Tracker - Admin'),
-      ),
-      drawer: DrawerWidget(),
-      backgroundColor: Color(0xff2c4260),
-      body: this.isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Container(
-              child: SingleChildScrollView(
-              child: Column(
-                children: <Widget>[...getCards()],
+    return WillPopScope(
+      onWillPop: () =>
+          SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
+      child: Scaffold(
+        floatingActionButton: Container(
+          // alignment: Alignment.center,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              InkWell(
+                onTap: () => this.getUsers(),
+                child: Stack(children: <Widget>[
+                  FloatingActionButton(
+                    onPressed: () => this.getUsers(),
+                    backgroundColor: Colors.red,
+                  ),
+                  Container(
+                      height: 60,
+                      width: 50,
+                      // color: Colors.red,
+                      child: Icon(
+                        Icons.refresh,
+                        size: 30,
+                        color: Colors.white,
+                      )),
+                ]),
               ),
-            )),
+            ],
+          ),
+        ),
+        appBar: AppBar(
+          backgroundColor: Color(0xff2c4260),
+          elevation: 0.0,
+          title: Text('Covid Tracker - Admin'),
+        ),
+        drawer: DrawerWidget(),
+        backgroundColor: Color(0xff2c4260),
+        body: this.isLoading
+            ? Center(child: CircularProgressIndicator())
+            : Container(
+                child: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[...getCards()],
+                ),
+              )),
+      ),
     );
   }
 }
