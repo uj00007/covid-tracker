@@ -5,4 +5,5 @@ class Routes {
   static final String adminHomeScreenRoute = 'adminhomescreen';
   static final String faqScreenRoute = 'faq';
   static final String healthCheckerScreenRoute = 'heathchecker';
+  static final String addContactPersonRoute = 'addcontactperson';
 }
