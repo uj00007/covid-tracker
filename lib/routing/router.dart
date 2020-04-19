@@ -1,5 +1,9 @@
-import 'package:covid_tracker/screens/admin_homescreen.dart';
+import 'package:covid_tracker/routing/routes.dart';
+import 'package:covid_tracker/screens/addContact/add_contact.dart';
+import 'package:covid_tracker/screens/adminHomescreen/admin_homescreen.dart';
 import 'package:covid_tracker/screens/homescreen/homescreen.dart';
+import 'package:covid_tracker/screens/login/login.dart';
+import 'package:covid_tracker/screens/splash/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
 
@@ -11,14 +15,33 @@ class FluroRouter {
   static Handler _adminHomeScreenHandler = Handler(
       handlerFunc: (BuildContext context, Map<String, dynamic> params) =>
           AdminHomeScreen());
+  static Handler _splashScreenHandler = Handler(
+      handlerFunc: (BuildContext context, Map<String, dynamic> params) =>
+          SplashScreen());
+  static Handler _loginScreenHandler = Handler(
+      handlerFunc: (BuildContext context, Map<String, dynamic> params) =>
+          LoginScreen());
+  static Handler _addContactScreenHandler = Handler(
+      handlerFunc: (BuildContext context, Map<String, dynamic> params) =>
+          AddContactScreen());
+
   static void setupRouter() {
     router.define(
-      'homescreen',
+      Routes.homeScreenRoute,
       handler: _homeScreenHandler,
     );
     router.define(
-      'adminhomescreen',
+      Routes.adminHomeScreenRoute,
       handler: _adminHomeScreenHandler,
     );
+    router.define(
+      Routes.loginRoute,
+      handler: _loginScreenHandler,
+    );
+    router.define(
+      Routes.addContactPersonRoute,
+      handler: _addContactScreenHandler,
+    );
+    router.define(Routes.splashRoute, handler: _splashScreenHandler);
   }
 }

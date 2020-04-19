@@ -1,6 +1,12 @@
+import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:covid_tracker/colors/colors.dart';
+import 'package:covid_tracker/components/bar_chart.dart';
+import 'package:covid_tracker/components/custom_button.dart';
+import 'package:covid_tracker/models/user.dart';
+import 'package:covid_tracker/routing/routes.dart';
 import 'package:covid_tracker/screens/drawer/drawer.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -9,7 +15,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:math';
+import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
+
 import 'package:fl_chart/fl_chart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({Key key}) : super(key: key);
@@ -28,14 +38,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Position _currentPosition;
   List hotspots = [];
   List nearesthotspots = [];
-  var maxX = 50.0;
-  var maxY = 50.0;
-  final radius = 8.0;
-
-  Color blue1 = const Color(0xFF0D47A1);
-  Color blue2 = const Color(0xFF42A5F5).withOpacity(0.8);
-
-  bool showFlutter = true;
+  var nearestHotspot;
+  bool isProcessing = false;
+  bool isSafe = true;
+  User user;
 
   @override
   void initState() {
@@ -44,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
     print(_firebaseMessaging);
     notificationConfigurationSetter();
     setupdatabase();
+    getUser();
   }
 
   void setupdatabase() async {
@@ -66,6 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
     //   "email_id": "uj00007@gmail.com",
     //   "token": ""
     // });
+    getUserInfo();
     _getHotspotData();
   }
 
@@ -84,7 +92,8 @@ class _HomeScreenState extends State<HomeScreen> {
       onMessage: (Map<String, dynamic> message) async {
         print("onMessage: $message");
         // _showItemDialog(message);
-        _showNotification('fghcv', 'des');
+        _showNotification(
+            message["notification"]["title"], message["notification"]["body"]);
       },
       onLaunch: (Map<String, dynamic> message) async {
         print("onLaunch: $message");
@@ -134,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
     var platformChannelSpecifics = new NotificationDetails(
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
     await _flutterLocalNotificationsPlugin.show(
-        1, 'Hi', 'Hello', platformChannelSpecifics);
+        1, title, subtitle, platformChannelSpecifics);
   }
 
   getToken() async {
@@ -143,8 +152,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _getCurrentLocation() {
-    // nearesthotspots = [];
-    // hotspots = [];
+    this.setState(() {
+      this.isProcessing = true;
+      this.nearesthotspots = [];
+    });
     final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
 
     geolocator
@@ -169,6 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   _calculateNearestHotspots() {
     print('calculating nearby');
+    nearestHotspot = null;
+
     if (hotspots.isNotEmpty) {
       hotspots.forEach((hotspot) {
         var dist = getDistanceFromLatLonInKm(
@@ -178,11 +191,118 @@ class _HomeScreenState extends State<HomeScreen> {
             _currentPosition.longitude);
         // print(dist);
         if ((dist - double.parse(hotspot["radius"])) < 200) {
+          hotspot["distance"] =
+              (dist - double.parse(hotspot["radius"])).toStringAsFixed(3);
           nearesthotspots.add(hotspot);
+          if ((dist - double.parse(hotspot["radius"])) < 100) {
+            nearestHotspot = hotspot;
+          }
         }
       });
     }
-    print(nearesthotspots);
+    // print(nearesthotspots);
+    print('nearest ${nearestHotspot}');
+    if (nearestHotspot != null) {
+      // _showNotification('ALERT!!!', 'You are in a vicinity');
+      updateDBOfUser();
+      this.setState(() {
+        this.isProcessing = false;
+        this.isSafe = false;
+        this.nearestHotspot = nearestHotspot;
+        this.nearesthotspots = nearesthotspots;
+      });
+    } else {
+      updateDBOfUserSafe();
+      this.setState(() {
+        this.isProcessing = false;
+        this.isSafe = true;
+        this.nearestHotspot = nearestHotspot;
+        this.nearesthotspots = nearesthotspots;
+      });
+    }
+  }
+
+  updateDBOfUser() {
+    database
+        .reference()
+        .child('users/${user.id}/nearest_hotspot')
+        .set(this.nearestHotspot);
+    database.reference().child('users/${user.id}/is_safe').set(false);
+    getApiRequest(
+        'https://us-central1-covid-tracker-85a72.cloudfunctions.net/sendNotification?id=${user.id}');
+  }
+
+  updateDBOfUserSafe() {
+    database
+        .reference()
+        .child('users/${user.id}/nearest_hotspot')
+        .set(this.nearestHotspot);
+    database.reference().child('users/${user.id}/is_safe').set(true);
+  }
+
+  getUserInfo() {
+    database
+        .reference()
+        .child('users/${user.id}')
+        .once()
+        .then((DataSnapshot snapshot) {
+      print('value ${snapshot.value}');
+      if (snapshot.value != null) {
+        this.setState(() {
+          this.isSafe = snapshot.value["is_safe"];
+        });
+      }
+    });
+  }
+
+  getApiRequest(String url, {Map<String, String> headers}) async {
+    IOClient myClient;
+
+    // Map<String, String> header = {
+    //   HttpHeaders.authorizationHeader: user.authToken,
+    //   'agent_id': user.agentId.toString()
+    // };
+    HttpClient httpClient = new HttpClient();
+
+    myClient = IOClient(httpClient);
+    try {
+      print('get url hit -> $url');
+//        ClevertapFlutter.pushEvent(
+//            'Api Get Request', {'url': url, "header": header});
+      http.Response response = await myClient.get(url, headers: headers);
+      if (response != null) {
+        print('get response status code-> ${response.statusCode}');
+        final int statusCode = response.statusCode;
+      }
+      // return http
+      //     .get(url, headers: headers)
+      //     .timeout(Duration(seconds: timeoutInSeconds),
+      //         onTimeout: () => onTimeout(failureCallback))
+      //     .then((http.Response response) {
+      //   print("header--->>> ${headers.toString()}");
+      //   print('get response status code-> ${response}');
+
+      //   if (response != null) {
+      //     print('get response status code-> ${response.statusCode}');
+      //     final int statusCode = response.statusCode;
+      //     updateAuthHeaders(response);
+      //     return statusCodeCheck(
+      //       statusCode,
+      //       response,
+      //       successCallback,
+      //       failureCallback,
+      //     );
+      //   } else
+      //     return failureCallback({});
+      // });
+    }
+    // on TimeoutException catch (e) {
+    //   onTimeout(failureCallback);
+    // }
+    catch (error) {
+      print('api failed');
+      print(error);
+    }
   }
 
   getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
@@ -200,202 +320,170 @@ class _HomeScreenState extends State<HomeScreen> {
     return deg * (pi / 180);
   }
 
+  getUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    //Return String
+    String stringValue = prefs.getString('user');
+    print(stringValue);
+    if (stringValue != null) {
+      user = User.fromJson(
+          json.decode(stringValue), json.decode(stringValue)["id"]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     print(MediaQuery.of(context).size.width);
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Color(0xff2c4260),
+        elevation: 0.0,
         title: Text('Covid Tracker'),
       ),
-      drawer: DrawerWidget(),
-      body: Center(
+      floatingActionButton: Container(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: <Widget>[
-            Icon(
-              Icons.location_on,
-              color: CommonColors.softRed,
-              size: 30,
-            ),
-            FlatButton(
-              child: Text("Get Hotspots"),
-              onPressed: () {
-                // Get location here
-                // setState(() {
-                //   nearesthotspots = [];
-                //   hotspots = [];
-                // });
-
-                _getCurrentLocation();
-              },
-            ),
             InkWell(
-              onTap: () {
-                setState(() {
-                  showFlutter = !showFlutter;
-                });
-              },
-              child: Container(
-                child: ScatterChart(
-                  ScatterChartData(
-                    scatterSpots:
-                        showFlutter ? flutterLogoData() : randomData(),
-                    minX: 0,
-                    maxX: 30,
-                    minY: 0,
-                    maxY: 30,
-                    borderData: FlBorderData(
-                      show: false,
-                    ),
-                    gridData: FlGridData(
-                      show: true,
-                    ),
-                    titlesData: FlTitlesData(
-                      show: true,
-                    ),
-                    scatterTouchData: ScatterTouchData(
-                      enabled: false,
-                    ),
-                  ),
-                  swapAnimationDuration: const Duration(milliseconds: 600),
-                ),
-              ),
+              onTap: () => _getCurrentLocation(),
+              child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24.0),
+                  child: Icon(
+                    Icons.refresh,
+                    size: 40,
+                    color: Colors.red,
+                  )),
             ),
+            CustomButton(
+                width: 200,
+                onPressed: () => Navigator.of(context)
+                    .pushNamed(Routes.addContactPersonRoute),
+                label: 'Add Visited People'),
           ],
         ),
       ),
+      drawer: DrawerWidget(),
+      backgroundColor: Color(0xff2c4260),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              !this.isSafe
+                  ? Container(
+                      // color: Colors.red,
+                      height: 100,
+                      width: MediaQuery.of(context).size.width,
+                      child: Card(
+                        color: Colors.red,
+                        elevation: 1.0,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            Text("ALERT!!",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 30,
+                                    letterSpacing: 5,
+                                    fontWeight: FontWeight.w700)),
+                            Text("You are inside a hotspot zone",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    letterSpacing: 2,
+                                    fontWeight: FontWeight.w700)),
+                          ],
+                        ),
+                      ),
+                    )
+                  : SizedBox(),
+              !this.isProcessing &&
+                      this.nearesthotspots != null &&
+                      this.nearesthotspots.length != 0
+                  ? Column(
+                      children: <Widget>[
+                        BarChartSample2(nearesthotspots: this.nearesthotspots),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            child: Row(
+                              children: <Widget>[
+                                Container(
+                                  height: 25,
+                                  width: 25,
+                                  color: Color(0xff53fdd7),
+                                ),
+                                Text(
+                                  '-  Represents cases..',
+                                  style: TextStyle(
+                                      color: const Color(0xff7589a2),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            child: Row(
+                              children: <Widget>[
+                                Container(
+                                  height: 25,
+                                  width: 25,
+                                  color: Color(0xffff5182),
+                                ),
+                                Text(
+                                  '-  Represents proximity distance to hotspot..',
+                                  style: TextStyle(
+                                      color: const Color(0xff7589a2),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14),
+                                )
+                              ],
+                            ),
+                          ),
+                        )
+                      ],
+                    )
+                  : SizedBox(),
+              !this.isProcessing
+                  ? Icon(
+                      Icons.location_on,
+                      color: CommonColors.softRed,
+                      size: 40,
+                    )
+                  : CircularProgressIndicator(),
+              (!this.isProcessing &&
+                      this.nearesthotspots != null &&
+                      this.nearesthotspots.length == 0)
+                  ? FlatButton(
+                      child: Text("Get Hotspots"),
+                      onPressed: () {
+                        // Get location here
+                        // setState(() {
+                        //   nearesthotspots = [];
+                        //   hotspots = [];
+                        // });
+
+                        _getCurrentLocation();
+                      },
+                    )
+                  : SizedBox(),
+              _currentPosition != null
+                  ? Text(
+                      '${_currentPosition.latitude.toString()} ,${_currentPosition.longitude.toString()}',
+                      style: TextStyle(color: Color(0xffff5182)),
+                    )
+                  : SizedBox(),
+            ],
+          ),
+        ),
+      ),
     );
-  }
-
-  List<ScatterSpot> flutterLogoData() {
-    return [
-      /// section 1
-      ScatterSpot(20, 14.5, color: blue1, radius: radius),
-      ScatterSpot(22, 16.5, color: blue1, radius: radius),
-      ScatterSpot(24, 18.5, color: blue1, radius: radius),
-
-      ScatterSpot(22, 12.5, color: blue1, radius: radius),
-      ScatterSpot(24, 14.5, color: blue1, radius: radius),
-      ScatterSpot(26, 16.5, color: blue1, radius: radius),
-
-      ScatterSpot(24, 10.5, color: blue1, radius: radius),
-      ScatterSpot(26, 12.5, color: blue1, radius: radius),
-      ScatterSpot(28, 14.5, color: blue1, radius: radius),
-
-      ScatterSpot(26, 8.5, color: blue1, radius: radius),
-      ScatterSpot(28, 10.5, color: blue1, radius: radius),
-      ScatterSpot(30, 12.5, color: blue1, radius: radius),
-
-      ScatterSpot(28, 6.5, color: blue1, radius: radius),
-      ScatterSpot(30, 8.5, color: blue1, radius: radius),
-      ScatterSpot(32, 10.5, color: blue1, radius: radius),
-
-      ScatterSpot(30, 4.5, color: blue1, radius: radius),
-      ScatterSpot(32, 6.5, color: blue1, radius: radius),
-      ScatterSpot(34, 8.5, color: blue1, radius: radius),
-
-      ScatterSpot(34, 4.5, color: blue1, radius: radius),
-      ScatterSpot(36, 6.5, color: blue1, radius: radius),
-
-      ScatterSpot(38, 4.5, color: blue1, radius: radius),
-
-      /// section 2
-      ScatterSpot(20, 14.5, color: blue2, radius: radius),
-      ScatterSpot(22, 12.5, color: blue2, radius: radius),
-      ScatterSpot(24, 10.5, color: blue2, radius: radius),
-
-      ScatterSpot(22, 16.5, color: blue2, radius: radius),
-      ScatterSpot(24, 14.5, color: blue2, radius: radius),
-      ScatterSpot(26, 12.5, color: blue2, radius: radius),
-
-      ScatterSpot(24, 18.5, color: blue2, radius: radius),
-      ScatterSpot(26, 16.5, color: blue2, radius: radius),
-      ScatterSpot(28, 14.5, color: blue2, radius: radius),
-
-      ScatterSpot(26, 20.5, color: blue2, radius: radius),
-      ScatterSpot(28, 18.5, color: blue2, radius: radius),
-      ScatterSpot(30, 16.5, color: blue2, radius: radius),
-
-      ScatterSpot(28, 22.5, color: blue2, radius: radius),
-      ScatterSpot(30, 20.5, color: blue2, radius: radius),
-      ScatterSpot(32, 18.5, color: blue2, radius: radius),
-
-      ScatterSpot(30, 24.5, color: blue2, radius: radius),
-      ScatterSpot(32, 22.5, color: blue2, radius: radius),
-      ScatterSpot(34, 20.5, color: blue2, radius: radius),
-
-      ScatterSpot(34, 24.5, color: blue2, radius: radius),
-      ScatterSpot(36, 22.5, color: blue2, radius: radius),
-
-      ScatterSpot(38, 24.5, color: blue2, radius: radius),
-
-      /// section 3
-      ScatterSpot(10, 25, color: blue2, radius: radius),
-      ScatterSpot(12, 23, color: blue2, radius: radius),
-      ScatterSpot(14, 21, color: blue2, radius: radius),
-
-      ScatterSpot(12, 27, color: blue2, radius: radius),
-      ScatterSpot(14, 25, color: blue2, radius: radius),
-      ScatterSpot(16, 23, color: blue2, radius: radius),
-
-      ScatterSpot(14, 29, color: blue2, radius: radius),
-      ScatterSpot(16, 27, color: blue2, radius: radius),
-      ScatterSpot(18, 25, color: blue2, radius: radius),
-
-      ScatterSpot(16, 31, color: blue2, radius: radius),
-      ScatterSpot(18, 29, color: blue2, radius: radius),
-      ScatterSpot(20, 27, color: blue2, radius: radius),
-
-      ScatterSpot(18, 33, color: blue2, radius: radius),
-      ScatterSpot(20, 31, color: blue2, radius: radius),
-      ScatterSpot(22, 29, color: blue2, radius: radius),
-
-      ScatterSpot(20, 35, color: blue2, radius: radius),
-      ScatterSpot(22, 33, color: blue2, radius: radius),
-      ScatterSpot(24, 31, color: blue2, radius: radius),
-
-      ScatterSpot(22, 37, color: blue2, radius: radius),
-      ScatterSpot(24, 35, color: blue2, radius: radius),
-      ScatterSpot(26, 33, color: blue2, radius: radius),
-
-      ScatterSpot(24, 39, color: blue2, radius: radius),
-      ScatterSpot(26, 37, color: blue2, radius: radius),
-      ScatterSpot(28, 35, color: blue2, radius: radius),
-
-      ScatterSpot(26, 41, color: blue2, radius: radius),
-      ScatterSpot(28, 39, color: blue2, radius: radius),
-      ScatterSpot(30, 37, color: blue2, radius: radius),
-
-      ScatterSpot(28, 43, color: blue2, radius: radius),
-      ScatterSpot(30, 41, color: blue2, radius: radius),
-      ScatterSpot(32, 39, color: blue2, radius: radius),
-
-      ScatterSpot(30, 45, color: blue2, radius: radius),
-      ScatterSpot(32, 43, color: blue2, radius: radius),
-      ScatterSpot(34, 41, color: blue2, radius: radius),
-
-      ScatterSpot(34, 45, color: blue2, radius: radius),
-      ScatterSpot(36, 43, color: blue2, radius: radius),
-
-      ScatterSpot(38, 45, color: blue2, radius: radius),
-    ];
-  }
-
-  List<ScatterSpot> randomData() {
-    // const blue1Count = 2;
-    List<ScatterSpot> splatterlist = [];
-    var blue2Count = nearesthotspots.length;
-    splatterlist = List.generate(blue2Count, (i) {
-      Color color;
-      color = blue2;
-
-      return ScatterSpot((Random().nextDouble() * (maxX - 8)) + 4,
-          (Random().nextDouble() * (maxY - 8)) + 4,
-          color: color,
-          // radius: (Random().nextDouble() * 16) + 4,
-          radius: double.parse(nearesthotspots[i]["radius"]));
-    });
-    splatterlist.add(ScatterSpot(25, 25, color: blue1, radius: radius));
-    return splatterlist;
   }
 }

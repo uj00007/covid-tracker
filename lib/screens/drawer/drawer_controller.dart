@@ -242,6 +242,11 @@ class SideDrawerController {
             onPressed: () => Navigator.of(drawerContext)
                 .pushNamed(Routes.healthCheckerScreenRoute));
         break;
+      case 'ADD_CONTACT':
+        widgetToAdd = widgetToAdd = drawerListTile('', 'Add Visited People',
+            onPressed: () => Navigator.of(drawerContext)
+                .pushNamed(Routes.addContactPersonRoute));
+        break;
       case 'TRACKER_HOME':
         widgetToAdd = widgetToAdd = drawerListTile('', 'Tracker Home',
             onPressed: () =>
