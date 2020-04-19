@@ -14,14 +14,6 @@ const String drawerJsonString = '''{
   "user": {
     "drawer": [
       {
-        "tile": "TRACKER_HOME",
-        "render_section": "DRAWER_SECTION"
-      },
-      {
-        "tile": "HEALTH_CHECKER",
-        "render_section": "DRAWER_SECTION"
-      },
-      {
         "tile": "ADD_CONTACT",
         "render_section": "DRAWER_SECTION"
       }

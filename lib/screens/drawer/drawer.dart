@@ -72,10 +72,32 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 ),
               ),
             ),
-            // SizedBox(
-            //   height: 20,
-            // ),
-            // ..._drawerController.lowerSectionwidgets,
+            SizedBox(
+              height: 20,
+            ),
+            Container(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: <Widget>[
+                    Text(
+                      'Developed & Supported By:',
+                      style: TextStyle(
+                          color: CommonColors.grey,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400),
+                    ),
+                    Text(
+                      'Ujjwal Goyal   /   9650377543',
+                      style: TextStyle(
+                          color: CommonColors.grey,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ));
   }
