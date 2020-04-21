@@ -133,6 +133,14 @@ class _SplashScreenState extends State<SplashScreen> {
     print('updated successfully');
   }
 
+  setUserToStorage(user, id) async {
+    user["id"] = id;
+    user["token"] = this.fcmtoken;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('user', json.encode(user));
+    print('updated successfully');
+  }
+
   getUserFromDB(id) {
     if (id != null) {
       database
@@ -144,6 +152,8 @@ class _SplashScreenState extends State<SplashScreen> {
         if (snapshot.value != null) {
           if (this.fcmtoken != snapshot.value['token']) {
             addUserToStorage(snapshot.value, id);
+          } else {
+            setUserToStorage(snapshot.value, id);
           }
 
           if (snapshot.value['is_admin'])
