@@ -4,6 +4,7 @@ import 'package:covid_tracker/screens/addContact/add_contact.dart';
 import 'package:covid_tracker/screens/adminHomescreen/admin_homescreen.dart';
 import 'package:covid_tracker/screens/homescreen/homescreen.dart';
 import 'package:covid_tracker/screens/login/login.dart';
+import 'package:covid_tracker/screens/map_screen.dart';
 import 'package:covid_tracker/screens/splash/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
@@ -19,6 +20,11 @@ class FluroRouter {
   static Handler _splashScreenHandler = Handler(
       handlerFunc: (BuildContext context, Map<String, dynamic> params) =>
           SplashScreen());
+  static Handler _mapScreen = Handler(
+      handlerFunc: (BuildContext context, Map<String, dynamic> params) =>
+          MapScreen(
+            key: UniqueKey(),
+          ));
   static Handler _loginScreenHandler = Handler(
       handlerFunc: (BuildContext context, Map<String, dynamic> params) =>
           LoginScreen());
@@ -56,6 +62,10 @@ class FluroRouter {
     router.define(
       Routes.viewContactPersons,
       handler: _viewContactPersonScreenHandler,
+    );
+    router.define(
+      Routes.mapScreen,
+      handler: _mapScreen,
     );
     router.define(Routes.splashRoute, handler: _splashScreenHandler);
   }

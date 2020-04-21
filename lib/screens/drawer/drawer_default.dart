@@ -2,11 +2,15 @@ const String drawerJsonString = '''{
   "admin": {
     "drawer": [
       {
-        "tile": "USER_TRACKER",
+        "tile": "ADD_CONTACT",
         "render_section": "DRAWER_SECTION"
       },
       {
-        "tile": "HEALTH_CHECKER",
+        "tile": "VIEW_VISITED_PEOPLE",
+        "render_section": "DRAWER_SECTION"
+      },
+      {
+        "tile": "VIEW_MAP_SCREEN",
         "render_section": "DRAWER_SECTION"
       }
     ]

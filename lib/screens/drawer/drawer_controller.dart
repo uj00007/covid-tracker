@@ -219,7 +219,8 @@ class SideDrawerController {
     // } else {
     //   drawerData = jsonObj[AgentType.BOUCE_AGENT];
     // }
-    drawerData = jsonObj['user'];
+    drawerData =
+        user != null && user.isAdmin ? jsonObj['admin'] : jsonObj['user'];
     drawerData['drawer'].forEach((item) {
       getWidgets(item);
     });
@@ -254,6 +255,11 @@ class SideDrawerController {
             onPressed: () => Navigator.of(drawerContext).pushNamed(
                 '${Routes.viewContactPersons}/${user.id}',
                 arguments: {"userId": user.id}));
+        break;
+      case 'VIEW_MAP_SCREEN':
+        widgetToAdd = widgetToAdd = drawerListTile('', 'View Map',
+            onPressed: () =>
+                Navigator.of(drawerContext).pushNamed(Routes.mapScreen));
         break;
       case 'TRACKER_HOME':
         widgetToAdd = widgetToAdd = drawerListTile('', 'Tracker Home',

@@ -33,6 +33,8 @@ class _DrawerWidgetState extends State<DrawerWidget> {
     print(stringValue);
     if (stringValue != null) {
       _drawerController.user = User.fromJson(json.decode(stringValue), '');
+      // _drawerController.widgetBuilder();
+      this.setState(() {});
     }
   }
 
@@ -84,7 +86,9 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   topRight: Radius.circular(22),
                   bottomRight: Radius.circular(22),
                 )),
-                child: Flex(
+                child:
+                    //  Container()
+                    Flex(
                   direction: Axis.vertical,
                   children: <Widget>[
                     ..._drawerController.drawersectionwidgets,
