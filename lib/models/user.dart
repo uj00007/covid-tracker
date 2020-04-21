@@ -9,6 +9,7 @@ class User {
   String name;
   String state;
   String token;
+  String zone;
   Hotspot nearestHotspot;
   String mobileNumber;
   bool isInfected;
@@ -24,6 +25,7 @@ class User {
     this.name = '',
     this.state = '',
     this.token = '',
+    this.zone = 'blue',
     this.nearestHotspot,
     this.mobileNumber = '',
     this.isInfected = false,
@@ -53,6 +55,7 @@ class User {
       name: validateMapKey('name', json) ? json["name"] : '',
       state: validateMapKey('state', json) ? json["state"] : '',
       token: validateMapKey('token', json) ? json["token"] : '',
+      zone: validateMapKey('zone', json) ? json["zone"] : 'blue',
       nearestHotspot: validateMapKey('nearest_hotspot', json)
           ? Hotspot.fromJson(json["nearest_hotspot"])
           : null,
@@ -83,6 +86,7 @@ class User {
         "name": this.name,
         "state": this.state,
         "token": this.token,
+        "zone": this.zone,
         "nearest_hotspot":
             this.nearestHotspot != null ? this.nearestHotspot.toJson() : {},
         "mobile_number": this.mobileNumber,

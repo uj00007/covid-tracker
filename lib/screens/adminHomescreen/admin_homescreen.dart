@@ -1,5 +1,8 @@
+import 'package:covid_tracker/colors/colors.dart';
+import 'package:covid_tracker/components/custom_button.dart';
 import 'package:covid_tracker/routing/routes.dart';
 import 'package:covid_tracker/screens/drawer/drawer.dart';
+import 'package:covid_tracker/utils/exter_link_launcher.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +19,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   FirebaseApp app;
   FirebaseDatabase database;
   List users = [];
+  int blueCount = 0;
+  int redCount = 0;
+  int yellowCount = 0;
   bool isLoading = true;
 
   @override
@@ -46,13 +52,37 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           this.users = snapshot.value;
           this.isLoading = false;
         });
+        getCounts();
       }
+    });
+  }
+
+  getCounts() {
+    var blue = 0, red = 0, yellow = 0;
+    for (int i = 0; i < this.users.length; i++) {
+      this.users[i]["zone"] != null
+          ? this.users[i]["zone"] == 'blue'
+              ? blue += 1
+              : this.users[i]["zone"] == 'yellow' ? yellow += 1 : red += 1
+          : this.users[i]["is_safe"] ? blue += 1 : red += 1;
+    }
+    this.setState(() {
+      this.blueCount = blue;
+      this.redCount = red;
+      this.yellowCount = yellow;
     });
   }
 
   List<Widget> getCards() {
     List<Widget> widgets = [];
     for (int i = 0; i < this.users.length; i++) {
+      var msg = '';
+      msg = this.users[i]["zone"] != null
+          ? this.users[i]["zone"] == 'blue'
+              ? 'SAFE'
+              : this.users[i]["zone"] == 'yellow' ? 'CAUTION' : 'UNSAFE!!'
+          : this.users[i]["is_safe"] ? 'SAFE' : 'UNSAFE!!';
+
       widgets.add(Padding(
         padding: const EdgeInsets.all(8.0),
         child: InkWell(
@@ -60,7 +90,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               '${Routes.viewContactPersons}/${i}',
               arguments: {"userId": i}),
           child: Card(
-              color: this.users[i]["is_safe"] ? Colors.green : Colors.red,
+              color: this.users[i]["zone"] != null
+                  ? this.users[i]["zone"] == 'blue'
+                      ? Colors.blue
+                      : this.users[i]["zone"] == 'yellow'
+                          ? Colors.yellow
+                          : Colors.red
+                  : this.users[i]["is_safe"] ? Colors.blue : Colors.red,
               child: Container(
                   // height: 100,
                   padding: EdgeInsets.all(16),
@@ -95,7 +131,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       ),
                       Container(
                           child: Text(
-                        this.users[i]["is_safe"] ? 'SAFE' : 'UNSAFE!!',
+                        msg,
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 30,
@@ -147,7 +183,22 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         appBar: AppBar(
           backgroundColor: Color(0xff2c4260),
           elevation: 0.0,
-          title: Text('Covid Tracker - Admin'),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text('CovidTracker-Admin'),
+              CustomButton(
+                onPressed: () => ExternalLink.launchURL(),
+                label: 'Live Cases',
+                height: 40,
+                multiTap: true,
+                disabled: false,
+                width: 100,
+                color: Colors.white,
+                style: TextStyle(color: CommonColors.blueGrey, fontSize: 16),
+              ),
+            ],
+          ),
         ),
         drawer: DrawerWidget(),
         backgroundColor: Color(0xff2c4260),
@@ -156,7 +207,67 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             : Container(
                 child: SingleChildScrollView(
                 child: Column(
-                  children: <Widget>[...getCards()],
+                  children: <Widget>[
+                    Container(
+                      // height: 100,
+                      width: MediaQuery.of(context).size.width,
+                      child: Column(
+                        children: <Widget>[
+                          Text('Users in zones:',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 22)),
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: <Widget>[
+                                Card(
+                                  child: Container(
+                                    height: 60,
+                                    width: 60,
+                                    color: Colors.blue,
+                                    alignment: Alignment.center,
+                                    child: Text(this.blueCount.toString(),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.bold)),
+                                  ),
+                                ),
+                                Card(
+                                  child: Container(
+                                    height: 60,
+                                    width: 60,
+                                    color: Colors.yellow,
+                                    alignment: Alignment.center,
+                                    child: Text(this.yellowCount.toString(),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.bold)),
+                                  ),
+                                ),
+                                Card(
+                                  child: Container(
+                                    height: 60,
+                                    width: 60,
+                                    color: Colors.red,
+                                    alignment: Alignment.center,
+                                    child: Text(this.redCount.toString(),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.bold)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    ...getCards()
+                  ],
                 ),
               )),
       ),

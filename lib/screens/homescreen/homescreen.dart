@@ -9,6 +9,7 @@ import 'package:covid_tracker/components/custom_button.dart';
 import 'package:covid_tracker/models/user.dart';
 import 'package:covid_tracker/routing/routes.dart';
 import 'package:covid_tracker/screens/drawer/drawer.dart';
+import 'package:covid_tracker/utils/exter_link_launcher.dart';
 import 'package:covid_tracker/utils/location_package.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -50,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int counterBackgroundLocation = 0;
   RemoteConfig remoteConfig;
   var hotspotData = {};
+  String zone = 'blue';
 
   @override
   void initState() {
@@ -59,7 +61,12 @@ class _HomeScreenState extends State<HomeScreen> {
     notificationConfigurationSetter();
     setupdatabase();
     getUser();
-    hotspotData = {'hotspots_distance': 50, 'hotspot_alert_distance': 10};
+    hotspotData = {
+      'hotspots_distance': 50,
+      'hotspot_alert_distance': 2,
+      'hotspot_mid_distance': 5,
+      'hotspots_to_show': 5
+    };
     getBatckgroundLocationFlag = false;
     counterBackgroundLocation = 0;
     getHotspotData().then((res) => setState(() {
@@ -77,6 +84,8 @@ class _HomeScreenState extends State<HomeScreen> {
     //basically fetching from remote config
     var hdistance;
     var halertdistance;
+    var hmiddistance;
+    var count;
     bool backgroundLocationFetch = false;
     remoteConfig = await RemoteConfig.instance;
     try {
@@ -84,6 +93,8 @@ class _HomeScreenState extends State<HomeScreen> {
       await remoteConfig.activateFetched();
       hdistance = remoteConfig.getInt('hotspots_distance');
       halertdistance = remoteConfig.getInt('hotspot_alert_distance');
+      hmiddistance = remoteConfig.getInt('hotspot_mid_distance');
+      count = remoteConfig.getInt('hotspots_to_show');
       backgroundLocationFetch = remoteConfig.getBool('background_location');
     } on FetchThrottledException catch (exception) {
       // Fetch throttled.
@@ -95,6 +106,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return {
       'hotspots_distance': hdistance,
       'hotspot_alert_distance': halertdistance,
+      'hotspot_mid_distance': hmiddistance,
+      'hotspots_to_show': count,
       'background_location': backgroundLocationFetch
     };
   }
@@ -258,13 +271,25 @@ class _HomeScreenState extends State<HomeScreen> {
     print('Sort by Age: ' + nearesthotspots.toString());
     if (nearesthotspots != null && nearesthotspots.length > 0) {
       nearesthotspots = nearesthotspots.sublist(
-          0, nearesthotspots.length >= 5 ? 5 : nearesthotspots.length);
+          0,
+          nearesthotspots.length >= this.hotspotData['hotspots_to_show']
+              ? this.hotspotData['hotspots_to_show']
+              : nearesthotspots.length);
     }
 
     for (var hotspot in nearesthotspots) {
-      if (double.parse(hotspot['distance']) <
+      if (double.parse(hotspot['distance']) <=
           this.hotspotData['hotspot_alert_distance']) {
         nearestHotspot = hotspot;
+        this.zone = 'red';
+        break;
+      } else if (double.parse(hotspot['distance']) >
+              this.hotspotData['hotspot_alert_distance'] &&
+          double.parse(hotspot['distance']) <=
+              this.hotspotData['hotspot_mid_distance']) {
+        this.zone = 'yellow';
+      } else {
+        this.zone = 'blue';
       }
     }
 
@@ -278,6 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
         this.isSafe = false;
         this.nearestHotspot = nearestHotspot;
         this.nearesthotspots = nearesthotspots;
+        this.zone = zone;
       });
     } else {
       updateDBOfUserSafe();
@@ -286,6 +312,7 @@ class _HomeScreenState extends State<HomeScreen> {
         this.isSafe = true;
         this.nearestHotspot = nearestHotspot;
         this.nearesthotspots = nearesthotspots;
+        this.zone = zone;
       });
     }
   }
@@ -296,6 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .child('users/${user.id}/nearest_hotspot')
         .set(this.nearestHotspot);
     database.reference().child('users/${user.id}/is_safe').set(false);
+    database.reference().child('users/${user.id}/zone').set(this.zone);
     getApiRequest(
         'https://us-central1-covid-tracker-85a72.cloudfunctions.net/sendNotification?id=${user.id}');
   }
@@ -306,6 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .child('users/${user.id}/nearest_hotspot')
         .set(this.nearestHotspot);
     database.reference().child('users/${user.id}/is_safe').set(true);
+    database.reference().child('users/${user.id}/zone').set(this.zone);
   }
 
   getUserInfo() {
@@ -326,48 +355,17 @@ class _HomeScreenState extends State<HomeScreen> {
   getApiRequest(String url, {Map<String, String> headers}) async {
     IOClient myClient;
 
-    // Map<String, String> header = {
-    //   HttpHeaders.authorizationHeader: user.authToken,
-    //   'agent_id': user.agentId.toString()
-    // };
     HttpClient httpClient = new HttpClient();
 
     myClient = IOClient(httpClient);
     try {
       print('get url hit -> $url');
-//        ClevertapFlutter.pushEvent(
-//            'Api Get Request', {'url': url, "header": header});
       http.Response response = await myClient.get(url, headers: headers);
       if (response != null) {
         print('get response status code-> ${response.statusCode}');
         final int statusCode = response.statusCode;
       }
-      // return http
-      //     .get(url, headers: headers)
-      //     .timeout(Duration(seconds: timeoutInSeconds),
-      //         onTimeout: () => onTimeout(failureCallback))
-      //     .then((http.Response response) {
-      //   print("header--->>> ${headers.toString()}");
-      //   print('get response status code-> ${response}');
-
-      //   if (response != null) {
-      //     print('get response status code-> ${response.statusCode}');
-      //     final int statusCode = response.statusCode;
-      //     updateAuthHeaders(response);
-      //     return statusCodeCheck(
-      //       statusCode,
-      //       response,
-      //       successCallback,
-      //       failureCallback,
-      //     );
-      //   } else
-      //     return failureCallback({});
-      // });
-    }
-    // on TimeoutException catch (e) {
-    //   onTimeout(failureCallback);
-    // }
-    catch (error) {
+    } catch (error) {
       print('api failed');
       print(error);
     }
@@ -402,31 +400,93 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Widget> displaygraphData() {
     List<Widget> wid = [];
     this.nearesthotspots.forEach((hotspot) {
-      wid.add(Container(
-        padding: EdgeInsets.only(right: 8),
-        child: Column(
-          children: <Widget>[
-            Text(hotspot['name'],
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12)),
-            Text('cases: ${hotspot['cases']}',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12)),
-            Text('dist: ${double.parse(hotspot['distance']).floor()}km',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12)),
-          ],
+      wid.add(Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Card(
+          shape: RoundedRectangleBorder(
+            side: BorderSide(color: Colors.white70, width: 1),
+            borderRadius: BorderRadius.circular(200),
+          ),
+          elevation: 10.0,
+          child: Container(
+            height: 120,
+            width: 120,
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(hotspot['name'],
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                Text('cases: ${hotspot['cases']}',
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14)),
+                Text(
+                    '${double.parse(hotspot['distance']).floor() < 0 ? '0' : double.parse(hotspot['distance']).floor()}km',
+                    style: TextStyle(
+                        color: CommonColors.primaryColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20)),
+              ],
+            ),
+          ),
         ),
       ));
     });
 
     return wid;
+  }
+
+  Widget makeTransactionsIcon() {
+    const double width = 4.5;
+    const double space = 3.5;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        Container(
+          width: width,
+          height: 10,
+          color: Colors.white.withOpacity(0.4),
+        ),
+        const SizedBox(
+          width: space,
+        ),
+        Container(
+          width: width,
+          height: 28,
+          color: Colors.white.withOpacity(0.8),
+        ),
+        const SizedBox(
+          width: space,
+        ),
+        Container(
+          width: width,
+          height: 42,
+          color: Colors.white.withOpacity(1),
+        ),
+        const SizedBox(
+          width: space,
+        ),
+        Container(
+          width: width,
+          height: 28,
+          color: Colors.white.withOpacity(0.8),
+        ),
+        const SizedBox(
+          width: space,
+        ),
+        Container(
+          width: width,
+          height: 10,
+          color: Colors.white.withOpacity(0.4),
+        ),
+      ],
+    );
   }
 
   @override
@@ -439,7 +499,22 @@ class _HomeScreenState extends State<HomeScreen> {
         appBar: AppBar(
           backgroundColor: Color(0xff2c4260),
           elevation: 0.0,
-          title: Text('Covid Tracker'),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text('Covid Tracker'),
+              CustomButton(
+                onPressed: () => ExternalLink.launchURL(),
+                label: 'Live Cases',
+                height: 40,
+                multiTap: true,
+                disabled: false,
+                width: 100,
+                color: Colors.white,
+                style: TextStyle(color: CommonColors.blueGrey, fontSize: 16),
+              ),
+            ],
+          ),
         ),
         floatingActionButton: Container(
           child: Column(
@@ -508,63 +583,60 @@ class _HomeScreenState extends State<HomeScreen> {
                             this.nearesthotspots.length != 0
                         ? Column(
                             children: <Widget>[
-                              BarChartSample2(
-                                  nearesthotspots: this.nearesthotspots),
-                              this.nearesthotspots != null &&
-                                      this.nearesthotspots.length > 0
-                                  ? Container(
-                                      padding: EdgeInsets.only(left: 44),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: <Widget>[
-                                          ...displaygraphData()
-                                        ],
-                                      ),
-                                    )
-                                  : SizedBox(),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Container(
-                                  child: Row(
-                                    children: <Widget>[
-                                      Container(
-                                        height: 25,
-                                        width: 25,
-                                        color: Color(0xff53fdd7),
-                                      ),
-                                      Text(
-                                        '-  Represents cases..',
-                                        style: TextStyle(
-                                            color: const Color(0xff7589a2),
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14),
-                                      )
-                                    ],
+                              // BarChartSample2(
+                              //     nearesthotspots: this.nearesthotspots),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: <Widget>[
+                                  makeTransactionsIcon(),
+                                  const SizedBox(
+                                    width: 38,
                                   ),
-                                ),
+                                  const Text(
+                                    'hotspots near you..',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 22),
+                                  ),
+                                  const SizedBox(
+                                    width: 4,
+                                  ),
+                                ],
                               ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Container(
-                                  child: Row(
-                                    children: <Widget>[
-                                      Container(
-                                        height: 25,
-                                        width: 25,
-                                        color: Color(0xffff5182),
-                                      ),
-                                      Text(
-                                        '-  Represents proximity distance to hotspot..',
-                                        style: TextStyle(
-                                            color: const Color(0xff7589a2),
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              )
+                              Wrap(
+                                alignment: WrapAlignment.center,
+                                children: <Widget>[...displaygraphData()],
+                              ),
+                              // Container(
+                              //   padding: EdgeInsets.only(left: 44),
+                              //   child: Row(
+                              //     mainAxisAlignment: MainAxisAlignment.start,
+                              //     children: <Widget>[...displaygraphData()],
+                              //   ),
+                              // ),
+
+                              // Padding(
+                              //   padding: const EdgeInsets.all(8.0),
+                              //   child: Container(
+                              //     child: Row(
+                              //       children: <Widget>[
+                              //         Container(
+                              //           height: 25,
+                              //           width: 25,
+                              //           color: Color(0xffff5182),
+                              //         ),
+                              //         Text(
+                              //           '-  Represents proximity distance to hotspot..',
+                              //           style: TextStyle(
+                              //               color: const Color(0xff7589a2),
+                              //               fontWeight: FontWeight.bold,
+                              //               fontSize: 14),
+                              //         )
+                              //       ],
+                              //     ),
+                              //   ),
+                              // )
                             ],
                           )
                         : SizedBox(),

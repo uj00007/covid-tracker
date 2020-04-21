@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:covid_tracker/colors/colors.dart';
+import 'package:covid_tracker/models/user.dart';
 import 'package:covid_tracker/routing/routes.dart';
 import 'package:covid_tracker/screens/drawer/drawer_default.dart';
 import 'package:covid_tracker/utils/render_image.dart';
@@ -13,6 +14,7 @@ class SideDrawerController {
   var activeColor = CommonColors.moderateCyan;
   var inactiveColor = CommonColors.watermelon;
   BuildContext drawerContext;
+  User user;
   // renderProfileSection() {
   //   // var profilePic = utilities.getStringPreference('profilePic') != null &&
   //   //         utilities.getStringPreference('profilePic') != ''
@@ -246,6 +248,12 @@ class SideDrawerController {
         widgetToAdd = widgetToAdd = drawerListTile('', 'Add Visited People',
             onPressed: () => Navigator.of(drawerContext)
                 .pushNamed(Routes.addContactPersonRoute));
+        break;
+      case 'VIEW_VISITED_PEOPLE':
+        widgetToAdd = widgetToAdd = drawerListTile('', 'View Visited People',
+            onPressed: () => Navigator.of(drawerContext).pushNamed(
+                '${Routes.viewContactPersons}/${user.id}',
+                arguments: {"userId": user.id}));
         break;
       case 'TRACKER_HOME':
         widgetToAdd = widgetToAdd = drawerListTile('', 'Tracker Home',

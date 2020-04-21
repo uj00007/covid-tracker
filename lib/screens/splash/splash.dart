@@ -162,12 +162,14 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Container(
         height: MediaQuery.of(context).size.height,
-        color: Color(0xff1e252c),
+        color: Color(0xff123448),
         child: Image.asset(
-          'assets/images/Untitled_Artwork.png',
+          'assets/images/splash.png',
           alignment: Alignment.center,
-          fit: BoxFit.scaleDown,
-          height: 100,
+          fit: BoxFit.contain,
+          // height: 100,
+          // width: 100,
+          scale: 20,
         ),
       ),
     );

@@ -16,6 +16,10 @@ const String drawerJsonString = '''{
       {
         "tile": "ADD_CONTACT",
         "render_section": "DRAWER_SECTION"
+      },
+      {
+        "tile": "VIEW_VISITED_PEOPLE",
+        "render_section": "DRAWER_SECTION"
       }
     ]
   }

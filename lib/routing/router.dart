@@ -53,6 +53,10 @@ class FluroRouter {
       '${Routes.viewContactPersons}/:id',
       handler: _viewContactPersonScreenHandler,
     );
+    router.define(
+      Routes.viewContactPersons,
+      handler: _viewContactPersonScreenHandler,
+    );
     router.define(Routes.splashRoute, handler: _splashScreenHandler);
   }
 }
