@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:covid_tracker/colors/colors.dart';
 import 'package:covid_tracker/components/bar_chart.dart';
 import 'package:covid_tracker/components/custom_button.dart';
+import 'package:covid_tracker/components/flashing_button.dart';
 import 'package:covid_tracker/models/user.dart';
 import 'package:covid_tracker/routing/routes.dart';
 import 'package:covid_tracker/screens/drawer/drawer.dart';
@@ -503,7 +504,7 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Text('Covid Tracker'),
-              CustomButton(
+              FlashingButton(
                 onPressed: () => ExternalLink.launchURL(),
                 label: 'Live Cases',
                 height: 40,
@@ -535,7 +536,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 200,
                   onPressed: () => Navigator.of(context)
                       .pushNamed(Routes.addContactPersonRoute),
-                  label: 'Add Visited People'),
+                  label: 'Add Contact Log'),
             ],
           ),
         ),

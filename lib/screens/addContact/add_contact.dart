@@ -48,24 +48,24 @@ class _AddContactScreenState extends State<AddContactScreen> {
 
   Future getImage() async {
     var image = await ImagePicker.pickImage(source: ImageSource.camera);
-    String dir;
-    File newImage2;
-    final myDir = new Directory('/storage/emulated/0/Pictures/covid-tracker');
-    myDir.create().then((dir) {
-      if (_name != null && _name != '') {
-        image
-            .copy('${dir.path}/${_name.replaceAll(' ', '_')}.png')
-            .then((onValue) {
-          newImage2 = onValue;
-        });
-      } else {
-        image
-            .copy('${dir.path}/${image.path.split('/')[9]}.png')
-            .then((onValue) {
-          newImage2 = onValue;
-        });
-      }
-    });
+    // String dir;
+    // File newImage2;
+    // final myDir = new Directory('/storage/emulated/0/Pictures/covid-tracker');
+    // myDir.create().then((dir) {
+    //   if (_name != null && _name != '') {
+    //     image
+    //         .copy('${dir.path}/${_name.replaceAll(' ', '_')}.png')
+    //         .then((onValue) {
+    //       newImage2 = onValue;
+    //     });
+    //   } else {
+    //     image
+    //         .copy('${dir.path}/${image.path.split('/')[9]}.png')
+    //         .then((onValue) {
+    //       newImage2 = onValue;
+    //     });
+    //   }
+    // });
 
     setState(() {
       _image = image;
@@ -78,7 +78,6 @@ class _AddContactScreenState extends State<AddContactScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     //Return String
     String stringValue = prefs.getString('user');
-    print(stringValue);
     if (stringValue != null) {
       user = User.fromJson(json.decode(stringValue), '');
     }
@@ -96,26 +95,69 @@ class _AddContactScreenState extends State<AddContactScreen> {
 
   updateUser() {
     _time = new DateTime.now().toLocal().toString();
-    InContactUser incontactuser = InContactUser(
-        name: _name, place: _place, time: _time, mobileNumber: _mobileNumber);
-    if (user != null) {
-      database
-          .reference()
-          .child('users/${user.id}/in_contact_users')
-          .push()
-          .set(incontactuser.toJson());
-    }
-    final snackBar = SnackBar(
-      content: Text('Updated SuccessFully!!, thanks for info.'),
-      backgroundColor: CommonColors.green,
-    );
-    _scaffoldKey.currentState.showSnackBar(snackBar);
+    File newImage2;
+    if (_image != null) {
+      final myDir = new Directory('/storage/emulated/0/Pictures/covid-tracker');
+      myDir.create().then((dir) {
+        if (_name != null && _name != '') {
+          print('saved');
+          _image
+              .copy('${dir.path}/${_name.replaceAll(' ', '_')}.png')
+              .then((onValue) {
+            newImage2 = onValue;
+          });
+        } else {
+          print('unsaved');
+          _image
+              .copy('${dir.path}/${_image.path.split('/')[9]}.png')
+              .then((onValue) {
+            newImage2 = onValue;
+          });
+        }
+        this.setState(() {
+          _name = '';
+          _image = null;
+          _place = '';
+          _mobileNumber = '';
+        });
+      });
 
-    this.setState(() {
-      _name = '';
-      _place = '';
-      _mobileNumber = '';
-    });
+      InContactUser incontactuser = InContactUser(
+          name: _name, place: _place, time: _time, mobileNumber: _mobileNumber);
+      if (user != null) {
+        database
+            .reference()
+            .child('users/${user.id}/in_contact_users')
+            .push()
+            .set(incontactuser.toJson());
+      }
+      final snackBar = SnackBar(
+        content: Text('Updated SuccessFully!!, thanks for info.'),
+        backgroundColor: CommonColors.green,
+      );
+      _scaffoldKey.currentState.showSnackBar(snackBar);
+    } else {
+      InContactUser incontactuser = InContactUser(
+          name: _name, place: _place, time: _time, mobileNumber: _mobileNumber);
+      if (user != null) {
+        database
+            .reference()
+            .child('users/${user.id}/in_contact_users')
+            .push()
+            .set(incontactuser.toJson());
+      }
+      final snackBar = SnackBar(
+        content: Text('Updated SuccessFully!!, thanks for info.'),
+        backgroundColor: CommonColors.green,
+      );
+      _scaffoldKey.currentState.showSnackBar(snackBar);
+
+      this.setState(() {
+        _name = '';
+        _place = '';
+        _mobileNumber = '';
+      });
+    }
     _formKey.currentState.reset();
   }
 
@@ -127,7 +169,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
       appBar: AppBar(
         backgroundColor: CommonColors.backgroundColor,
         elevation: 0.0,
-        title: Text('Add Visited Persons'),
+        title: Text('Add Contact Log'),
       ),
       body: Container(
           color: CommonColors.backgroundColor,
@@ -261,7 +303,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
                       // If the form is valid, display a Snackbar.
                       print('validated');
                       _formKey.currentState.save();
-                      _image = null;
+
                       print(_name);
                       updateUser();
                     }

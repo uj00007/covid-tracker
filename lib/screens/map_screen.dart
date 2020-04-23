@@ -1,14 +1,20 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:covid_tracker/colors/colors.dart';
 import 'package:covid_tracker/components/custom_button.dart';
+import 'package:covid_tracker/components/flashing_button.dart';
+import 'package:covid_tracker/models/user.dart';
 import 'package:covid_tracker/utils/exter_link_launcher.dart';
+import 'package:covid_tracker/utils/group_codes.dart';
 import 'package:covid_tracker/utils/map_style_json.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({@required Key key}) : super(key: key);
@@ -28,11 +34,52 @@ class _MapScreenState extends State<MapScreen> {
   List hotspots = [];
   Position _currentPosition;
   Marker self;
+  User user;
+  RemoteConfig remoteConfig;
+
+  var groupCodes = {};
 
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+
+    groupCodes = json.decode(groupCodesDefaultJson);
+    getGroupCodes().then((res) {
+      _getCurrentLocation();
+      setState(() {
+        this.groupCodes = res;
+      });
+    });
+  }
+
+  Future<Map> getGroupCodes() async {
+    //basically fetching from remote config
+
+    var groupCodes;
+    remoteConfig = await RemoteConfig.instance;
+    try {
+      await remoteConfig.fetch(expiration: const Duration(hours: 0));
+      await remoteConfig.activateFetched();
+      groupCodes = json.decode(remoteConfig.getString('group_codes'));
+    } on FetchThrottledException catch (exception) {
+      // Fetch throttled.
+      print(exception);
+    } catch (exception) {
+      print('Unable to fetch remote config. Cached or default values will be '
+          'used');
+    }
+    return groupCodes;
+  }
+
+  getUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    //Return String
+    String stringValue = prefs.getString('user');
+    print(stringValue);
+    if (stringValue != null) {
+      this.user = User.fromJson(json.decode(stringValue), '');
+      setupdatabase();
+    }
   }
 
   void setupdatabase() async {
@@ -65,12 +112,12 @@ class _MapScreenState extends State<MapScreen> {
             position: LatLng(position.latitude, position.longitude));
       });
       print(_currentPosition);
-      setupdatabase();
+      getUser();
     }).catchError((e) {
       this.setState(() {
         _pos = CameraPosition(target: LatLng(12.897489, 78.34058), zoom: 11);
       });
-      setupdatabase();
+      getUser();
 
       print(e);
     });
@@ -100,7 +147,7 @@ class _MapScreenState extends State<MapScreen> {
         circleId: CircleId(hotspot['name'] != null ? hotspot['name'] : ''),
         center:
             LatLng(double.parse(hotspot['lat']), double.parse(hotspot['lng'])),
-        radius: 10000,
+        radius: double.parse(hotspot["radius"].toString()) * 1000,
       ));
     }
     this.setState(() {
@@ -111,9 +158,23 @@ class _MapScreenState extends State<MapScreen> {
   getUsers() {
     database.reference().child('users').once().then((DataSnapshot snapshot) {
       if (snapshot.value != null) {
-        this.setState(() {
-          this.users = snapshot.value;
-        });
+        if (!this.user.isSuperAdmin) {
+          List validUsers = [];
+          for (var user in snapshot.value) {
+            if (user['group_code'] != null &&
+                user['email_id'] != this.user.emailId &&
+                user['group_code'] == this.user.groupCode) {
+              validUsers.add(user);
+            }
+          }
+          this.setState(() {
+            this.users = validUsers;
+          });
+        } else {
+          this.setState(() {
+            this.users = snapshot.value;
+          });
+        }
         setUserMarkers();
       }
     });
@@ -122,16 +183,23 @@ class _MapScreenState extends State<MapScreen> {
   setUserMarkers() {
     List<Marker> markerstemp = this.self != null ? [self] : [];
     for (var user in this.users) {
-      if (user['location'] != null)
+      if (user['location'] != null) {
+        var userCode = user['group_code'] != null ? user['group_code'] : '100';
+        print(double.parse(this.groupCodes[userCode] != null
+            ? this.groupCodes[userCode]['hue_code'].toString()
+            : '2.0'));
         markerstemp.add(Marker(
             infoWindow: InfoWindow(title: user['name']),
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueAzure),
+            icon: BitmapDescriptor.defaultMarkerWithHue(double.parse(
+                this.groupCodes[userCode] != null
+                    ? this.groupCodes[userCode]['hue_code'].toString()
+                    : '2.0')),
             markerId: MarkerId(user['email_id']),
             draggable: false,
             onTap: () => print('tapped'),
             position: LatLng(
                 user['location']['latitude'], user['location']['longitude'])));
+      }
     }
     this.setState(() {
       this.markers = markerstemp;
@@ -195,7 +263,7 @@ class _MapScreenState extends State<MapScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             Text('CovidTracker-Admin'),
-            CustomButton(
+            FlashingButton(
               onPressed: () => ExternalLink.launchURL(),
               label: 'Live Cases',
               height: 40,

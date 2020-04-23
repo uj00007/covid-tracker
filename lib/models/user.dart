@@ -15,6 +15,8 @@ class User {
   bool isInfected;
   bool isSafe;
   bool isAdmin;
+  bool isSuperAdmin;
+  String groupCode;
   String emailId;
   String city;
   int age;
@@ -31,6 +33,8 @@ class User {
     this.isInfected = false,
     this.isSafe = true,
     this.isAdmin = false,
+    this.isSuperAdmin = false,
+    this.groupCode = '',
     this.emailId = '',
     this.city = '',
     this.age = 0,
@@ -65,6 +69,10 @@ class User {
           validateMapKey('is_infected', json) ? json["is_infected"] : false,
       isSafe: validateMapKey('is_safe', json) ? json["is_safe"] : true,
       isAdmin: validateMapKey('is_admin', json) ? json["is_admin"] : false,
+      isSuperAdmin: validateMapKey('is_super_admin', json)
+          ? json["is_super_admin"]
+          : false,
+      groupCode: validateMapKey('group_code', json) ? json["group_code"] : '',
       emailId: validateMapKey('email_id', json) ? json["email_id"] : '',
       city: validateMapKey('city', json) ? json["city"] : '',
       age: validateMapKey('age', json) ? json["age"] : 0,
@@ -93,6 +101,8 @@ class User {
         "is_infected": this.isInfected,
         "is_safe": this.isSafe,
         "is_admin": this.isAdmin,
+        "is_super_admin": this.isSuperAdmin,
+        "group_code": this.groupCode,
         "email_id": this.emailId,
         "city": this.city,
         "age": this.age,

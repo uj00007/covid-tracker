@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:covid_tracker/colors/colors.dart';
 import 'package:covid_tracker/components/custom_button.dart';
+import 'package:covid_tracker/components/flashing_button.dart';
 import 'package:covid_tracker/routing/routes.dart';
 import 'package:covid_tracker/screens/drawer/drawer.dart';
 import 'package:covid_tracker/utils/exter_link_launcher.dart';
@@ -7,6 +10,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:covid_tracker/models/user.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   AdminHomeScreen({Key key}) : super(key: key);
@@ -23,11 +28,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int redCount = 0;
   int yellowCount = 0;
   bool isLoading = true;
+  User user;
 
   @override
   void initState() {
     super.initState();
-    setupdatabase();
+    getUser();
   }
 
   void setupdatabase() async {
@@ -41,6 +47,17 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     getUsers();
   }
 
+  getUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    //Return String
+    String stringValue = prefs.getString('user');
+    print(stringValue);
+    if (stringValue != null) {
+      this.user = User.fromJson(json.decode(stringValue), '');
+      setupdatabase();
+    }
+  }
+
   getUsers() {
     this.setState(() {
       this.isLoading = true;
@@ -48,10 +65,27 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     database.reference().child('users').once().then((DataSnapshot snapshot) {
       // print('value ${snapshot.value}');
       if (snapshot.value != null) {
-        this.setState(() {
-          this.users = snapshot.value;
-          this.isLoading = false;
-        });
+        if (!this.user.isSuperAdmin) {
+          List validUsers = [];
+          for (var user in snapshot.value) {
+            if (user['group_code'] != null &&
+                user['email_id'] != this.user.emailId &&
+                user['group_code'] == this.user.groupCode) {
+              validUsers.add(user);
+            }
+          }
+
+          this.setState(() {
+            this.users = validUsers;
+            this.isLoading = false;
+          });
+        } else {
+          this.setState(() {
+            this.users = snapshot.value;
+            this.isLoading = false;
+          });
+        }
+
         getCounts();
       }
     });
@@ -187,7 +221,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Text('CovidTracker-Admin'),
-              CustomButton(
+              FlashingButton(
                 onPressed: () => ExternalLink.launchURL(),
                 label: 'Live Cases',
                 height: 40,

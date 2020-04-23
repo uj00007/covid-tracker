@@ -165,7 +165,7 @@ class _ViewContactPersonsScreenState extends State<ViewContactPersonsScreen> {
       appBar: AppBar(
         backgroundColor: Color(0xff2c4260),
         elevation: 0.0,
-        title: Text('Visited Persons List'),
+        title: Text('Contacted Persons List'),
       ),
       // drawer: DrawerWidget(),
       backgroundColor: Color(0xff2c4260),

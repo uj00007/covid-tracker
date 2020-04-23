@@ -12,10 +12,10 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="covid_tracker"
+        android:label="Bison COVID tracker"
         android:icon="@mipmap/ic_launcher">
         <meta-data android:name="com.google.android.geo.API_KEY"
-               android:value="AIzaSyD65Bl50ngV3upzTsGeRBdH36Z7cpt2RG4"/>
+               android:value="AIzaSyDxR6O-pd0zwUub-t5AZzQ5WnvowMfLPXQ"/>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

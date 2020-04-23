@@ -246,12 +246,12 @@ class SideDrawerController {
                 .pushNamed(Routes.healthCheckerScreenRoute));
         break;
       case 'ADD_CONTACT':
-        widgetToAdd = widgetToAdd = drawerListTile('', 'Add Visited People',
+        widgetToAdd = widgetToAdd = drawerListTile('', 'Update Contact Log',
             onPressed: () => Navigator.of(drawerContext)
                 .pushNamed(Routes.addContactPersonRoute));
         break;
       case 'VIEW_VISITED_PEOPLE':
-        widgetToAdd = widgetToAdd = drawerListTile('', 'View Visited People',
+        widgetToAdd = widgetToAdd = drawerListTile('', 'View Contact Log',
             onPressed: () => Navigator.of(drawerContext).pushNamed(
                 '${Routes.viewContactPersons}/${user.id}',
                 arguments: {"userId": user.id}));

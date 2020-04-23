@@ -59,23 +59,77 @@ class _DrawerWidgetState extends State<DrawerWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           direction: Axis.vertical,
           children: <Widget>[
-            Expanded(
-              flex: 3,
-              child: Container(
-                decoration: BoxDecoration(
-                    color: CommonColors.tilePurple,
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(16),
-                    )),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Container(
-                        // height: 200,
-                        )
-                  ],
-                ),
-              ),
+            // Expanded(
+            //   flex: 3,
+            //   child: Container(
+            //     decoration: BoxDecoration(
+            //         color: CommonColors.tilePurple,
+            //         borderRadius: BorderRadius.only(
+            //           topRight: Radius.circular(16),
+            //         )),
+            //     child: Column(
+            //       mainAxisAlignment: MainAxisAlignment.center,
+            //       children: <Widget>[
+            //         Container(
+            //           // height: 200,
+            //           child: Image.asset(
+            //             'assets/images/splash.png',
+            //             alignment: Alignment.center,
+            //             fit: BoxFit.fitWidth,
+            //             // height: 100,
+            //             // width: 100,
+            //             scale: 20,
+            //           ),
+            //         )
+            //       ],
+            //     ),
+            //   ),
+            // ),
+            Column(
+              children: <Widget>[
+                Container(
+                    child: Image.asset(
+                  'assets/images/splash.png',
+                  alignment: Alignment.center,
+                  // fit: BoxFit.contain,
+                  // height: 100,
+                  width: MediaQuery.of(context).size.width,
+                  // scale: 20,
+                )),
+                _drawerController.user != null
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Icon(
+                              Icons.person,
+                              color: CommonColors.grey,
+                            ),
+                          ),
+                          Column(
+                            children: <Widget>[
+                              Text(
+                                _drawerController.user.name,
+                                style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400),
+                              ),
+                              Text(
+                                _drawerController.user.emailId,
+                                style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400),
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
+                    : SizedBox()
+              ],
             ),
             Expanded(
               flex: 11,
@@ -107,14 +161,14 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      'Developed & Supported By:',
+                      '',
                       style: TextStyle(
                           color: Colors.white70,
                           fontSize: 16,
                           fontWeight: FontWeight.w400),
                     ),
                     Text(
-                      'uj00007@gmail.com',
+                      '',
                       style: TextStyle(
                           color: CommonColors.grey,
                           fontSize: 16,
