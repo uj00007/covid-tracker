@@ -133,6 +133,14 @@ class _SplashScreenState extends State<SplashScreen> {
     print('updated successfully');
   }
 
+  setUserToStorage(user, id) async {
+    user["id"] = id;
+    user["token"] = this.fcmtoken;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('user', json.encode(user));
+    print('updated successfully');
+  }
+
   getUserFromDB(id) {
     if (id != null) {
       database
@@ -144,6 +152,8 @@ class _SplashScreenState extends State<SplashScreen> {
         if (snapshot.value != null) {
           if (this.fcmtoken != snapshot.value['token']) {
             addUserToStorage(snapshot.value, id);
+          } else {
+            setUserToStorage(snapshot.value, id);
           }
 
           if (snapshot.value['is_admin'])
@@ -162,12 +172,14 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Container(
         height: MediaQuery.of(context).size.height,
-        color: Color(0xff1e252c),
+        color: Color(0xff123448),
         child: Image.asset(
-          'assets/images/Untitled_Artwork.png',
+          'assets/images/splash.png',
           alignment: Alignment.center,
-          fit: BoxFit.scaleDown,
-          height: 100,
+          fit: BoxFit.contain,
+          // height: 100,
+          // width: 100,
+          scale: 20,
         ),
       ),
     );

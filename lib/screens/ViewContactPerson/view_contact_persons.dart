@@ -16,7 +16,7 @@ class ViewContactPersonsScreen extends StatefulWidget {
 class _ViewContactPersonsScreenState extends State<ViewContactPersonsScreen> {
   FirebaseApp app;
   FirebaseDatabase database;
-  Map users = {};
+  List users = [];
   bool isLoading = true;
 
   @override
@@ -49,8 +49,17 @@ class _ViewContactPersonsScreenState extends State<ViewContactPersonsScreen> {
       // print('value ${snapshot.value}');
       if (snapshot.value != null &&
           snapshot.value['in_contact_users'] != null) {
+        var temp = [];
+        for (var user in snapshot.value['in_contact_users'].values) {
+          temp.add(user);
+        }
+
+        temp.sort((a, b) {
+          return DateTime.parse(b['time']).compareTo(DateTime.parse(a['time']));
+        });
+
         this.setState(() {
-          this.users = snapshot.value['in_contact_users'];
+          this.users = temp;
           this.isLoading = false;
         });
       } else {
@@ -64,7 +73,7 @@ class _ViewContactPersonsScreenState extends State<ViewContactPersonsScreen> {
   List<Widget> getCards() {
     List<Widget> widgets = [];
     if (this.users != null) {
-      for (var user in this.users.values) {
+      for (var user in this.users) {
         widgets.add(Padding(
           padding: const EdgeInsets.all(8.0),
           child: Card(
@@ -89,6 +98,15 @@ class _ViewContactPersonsScreenState extends State<ViewContactPersonsScreen> {
                                     letterSpacing: 1,
                                     fontWeight: FontWeight.w600)),
                             Text('Place: ${user['place']}',
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 3,
+                                style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 18,
+                                    letterSpacing: 1,
+                                    fontWeight: FontWeight.normal)),
+                            Text(
+                                'Mobile: ${user['mobile_number'] != null ? user['mobile_number'] : ''}',
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 3,
                                 style: TextStyle(
@@ -147,7 +165,7 @@ class _ViewContactPersonsScreenState extends State<ViewContactPersonsScreen> {
       appBar: AppBar(
         backgroundColor: Color(0xff2c4260),
         elevation: 0.0,
-        title: Text('Visited Persons List'),
+        title: Text('Contacted Persons List'),
       ),
       // drawer: DrawerWidget(),
       backgroundColor: Color(0xff2c4260),

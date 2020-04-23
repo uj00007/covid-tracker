@@ -9,11 +9,14 @@ class User {
   String name;
   String state;
   String token;
+  String zone;
   Hotspot nearestHotspot;
   String mobileNumber;
   bool isInfected;
   bool isSafe;
   bool isAdmin;
+  bool isSuperAdmin;
+  String groupCode;
   String emailId;
   String city;
   int age;
@@ -24,11 +27,14 @@ class User {
     this.name = '',
     this.state = '',
     this.token = '',
+    this.zone = 'blue',
     this.nearestHotspot,
     this.mobileNumber = '',
     this.isInfected = false,
     this.isSafe = true,
     this.isAdmin = false,
+    this.isSuperAdmin = false,
+    this.groupCode = '',
     this.emailId = '',
     this.city = '',
     this.age = 0,
@@ -53,6 +59,7 @@ class User {
       name: validateMapKey('name', json) ? json["name"] : '',
       state: validateMapKey('state', json) ? json["state"] : '',
       token: validateMapKey('token', json) ? json["token"] : '',
+      zone: validateMapKey('zone', json) ? json["zone"] : 'blue',
       nearestHotspot: validateMapKey('nearest_hotspot', json)
           ? Hotspot.fromJson(json["nearest_hotspot"])
           : null,
@@ -62,6 +69,10 @@ class User {
           validateMapKey('is_infected', json) ? json["is_infected"] : false,
       isSafe: validateMapKey('is_safe', json) ? json["is_safe"] : true,
       isAdmin: validateMapKey('is_admin', json) ? json["is_admin"] : false,
+      isSuperAdmin: validateMapKey('is_super_admin', json)
+          ? json["is_super_admin"]
+          : false,
+      groupCode: validateMapKey('group_code', json) ? json["group_code"] : '',
       emailId: validateMapKey('email_id', json) ? json["email_id"] : '',
       city: validateMapKey('city', json) ? json["city"] : '',
       age: validateMapKey('age', json) ? json["age"] : 0,
@@ -83,12 +94,15 @@ class User {
         "name": this.name,
         "state": this.state,
         "token": this.token,
+        "zone": this.zone,
         "nearest_hotspot":
             this.nearestHotspot != null ? this.nearestHotspot.toJson() : {},
         "mobile_number": this.mobileNumber,
         "is_infected": this.isInfected,
         "is_safe": this.isSafe,
         "is_admin": this.isAdmin,
+        "is_super_admin": this.isSuperAdmin,
+        "group_code": this.groupCode,
         "email_id": this.emailId,
         "city": this.city,
         "age": this.age,

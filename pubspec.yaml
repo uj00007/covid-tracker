@@ -30,11 +30,16 @@ dependencies:
   # firebase_crashlytics: ^0.1.0+3
   firebase_core:
   fluro:
-  flutter_svg: ^0.14.1
+  flutter_svg:
   geolocator: ^5.3.1
   fl_chart: ^0.9.0
   shared_preferences:
   firebase_remote_config: 0.3.0+3
+  image_picker: ^0.6.5
+  path_provider: ^1.6.5
+  permission_handler: ^4.2.0+hotfix.3
+  url_launcher: ^5.4.2
+  google_maps_flutter: ^0.5.26+2
 
 dev_dependencies:
   flutter_test:

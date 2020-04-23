@@ -26,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   List rawUsers = [];
   String _name;
   String _mobileNumber;
+  String _groupCode;
   String _email;
   int _age;
   String _token;
@@ -161,6 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
           temp = User.fromJson(rawUsers[i], i.toString());
           rawUsers[i]["name"] = _name;
           rawUsers[i]["mobile_number"] = _mobileNumber;
+          rawUsers[i]["group_code"] = _groupCode;
           rawUsers[i]["email_id"] = _email;
           rawUsers[i]["age"] = _age;
           rawUsers[i]["token"] = _token;
@@ -178,6 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
           id: usersUpdated.length.toString(),
           name: _name,
           mobileNumber: _mobileNumber,
+          groupCode: _groupCode,
           emailId: _email,
           age: _age,
           token: _token);
@@ -207,109 +210,139 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: MediaQuery.of(context).size.height - 100,
                 child: Center(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 24.0),
+                    padding: const EdgeInsets.only(top: 100.0, bottom: 50),
                     child: Card(
                       child: Container(
                           width: MediaQuery.of(context).size.width / 1.2,
-                          height: 400,
+                          // height: 400,
                           padding: EdgeInsets.all(16),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: <Widget>[
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: TextFormField(
-                                    decoration: const InputDecoration(
-                                      icon: Icon(Icons.person),
-                                      hintText: 'What do people call you?',
-                                      labelText: 'Name',
+                          child: SingleChildScrollView(
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: <Widget>[
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: TextFormField(
+                                      decoration: const InputDecoration(
+                                        icon: Icon(Icons.person),
+                                        hintText: 'What do people call you?',
+                                        labelText: 'Name',
+                                      ),
+                                      onSaved: (String value) {
+                                        _name = value;
+                                      },
+                                      validator: (value) {
+                                        if (value.isEmpty) {
+                                          return 'Please enter some text';
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                    onSaved: (String value) {
-                                      _name = value;
-                                    },
-                                    validator: (value) {
-                                      if (value.isEmpty) {
-                                        return 'Please enter some text';
-                                      }
-                                      return null;
-                                    },
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: TextFormField(
-                                    decoration: const InputDecoration(
-                                      icon: Icon(Icons.email),
-                                      hintText: "What's your email?",
-                                      labelText: 'Email',
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: TextFormField(
+                                      decoration: const InputDecoration(
+                                        icon: Icon(Icons.email),
+                                        hintText: "What's your email?",
+                                        labelText: 'Email',
+                                      ),
+                                      onSaved: (String value) {
+                                        _email = value;
+                                      },
+                                      validator: (value) {
+                                        if (value.isEmpty) {
+                                          return 'Please enter some text';
+                                        } else if (!value.contains('@')) {
+                                          return 'Please enter correct email';
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                    onSaved: (String value) {
-                                      _email = value;
-                                    },
-                                    validator: (value) {
-                                      if (value.isEmpty) {
-                                        return 'Please enter some text';
-                                      } else if (!value.contains('@')) {
-                                        return 'Please enter correct email';
-                                      }
-                                      return null;
-                                    },
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: TextFormField(
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      WhitelistingTextInputFormatter.digitsOnly
-                                    ],
-                                    decoration: const InputDecoration(
-                                      icon: Icon(Icons.settings_cell),
-                                      hintText:
-                                          'What is your mobile number(10 digits)',
-                                      labelText: 'Mobile Number',
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: TextFormField(
+                                      keyboardType: TextInputType.number,
+                                      inputFormatters: [
+                                        WhitelistingTextInputFormatter
+                                            .digitsOnly
+                                      ],
+                                      decoration: const InputDecoration(
+                                        icon: Icon(Icons.settings_cell),
+                                        hintText:
+                                            'What is your mobile number(10 digits)',
+                                        labelText: 'Mobile Number',
+                                      ),
+                                      onSaved: (String value) {
+                                        _mobileNumber = value;
+                                      },
+                                      validator: (value) {
+                                        if (value.isEmpty) {
+                                          return 'Please enter some text';
+                                        } else if (value.length != 10) {
+                                          return 'Enter a valid mobile number';
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                    onSaved: (String value) {
-                                      _mobileNumber = value;
-                                    },
-                                    validator: (value) {
-                                      if (value.isEmpty) {
-                                        return 'Please enter some text';
-                                      } else if (value.length != 10) {
-                                        return 'Enter a valid mobile number';
-                                      }
-                                      return null;
-                                    },
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: TextFormField(
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      WhitelistingTextInputFormatter.digitsOnly
-                                    ],
-                                    onSaved: (String value) {
-                                      _age = int.parse(value);
-                                    },
-                                    decoration: const InputDecoration(
-                                      icon: Icon(Icons.assignment_ind),
-                                      hintText: 'What is your age',
-                                      labelText: 'Age',
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: TextFormField(
+                                      keyboardType: TextInputType.number,
+                                      inputFormatters: [
+                                        WhitelistingTextInputFormatter
+                                            .digitsOnly
+                                      ],
+                                      decoration: const InputDecoration(
+                                        icon: Icon(Icons.group),
+                                        hintText: 'What is your group Code?',
+                                        labelText: 'Group Code',
+                                      ),
+                                      onSaved: (String value) {
+                                        _groupCode = value;
+                                      },
+                                      validator: (value) {
+                                        if (value.isEmpty) {
+                                          return 'Please enter some text';
+                                        } else if (value.length > 3) {
+                                          return 'Enter a valid group code';
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                    // validator: (value) {
-                                    //   if (value.isEmpty) {
-                                    //     return 'Please enter some text';
-                                    //   } else if (value.length > 3) {
-                                    //     return 'Enter a valid age';
-                                    //   }
-                                    //   return '';
-                                    // },
                                   ),
-                                ),
-                              ],
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: TextFormField(
+                                      keyboardType: TextInputType.number,
+                                      inputFormatters: [
+                                        WhitelistingTextInputFormatter
+                                            .digitsOnly
+                                      ],
+                                      onSaved: (String value) {
+                                        _age = int.parse(value);
+                                      },
+                                      decoration: const InputDecoration(
+                                        icon: Icon(Icons.assignment_ind),
+                                        hintText: 'What is your age',
+                                        labelText: 'Age',
+                                      ),
+                                      // validator: (value) {
+                                      //   if (value.isEmpty) {
+                                      //     return 'Please enter some text';
+                                      //   } else if (value.length > 3) {
+                                      //     return 'Enter a valid age';
+                                      //   }
+                                      //   return '';
+                                      // },
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           )),
                     ),

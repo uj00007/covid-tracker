@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:covid_tracker/colors/colors.dart';
+import 'package:covid_tracker/models/user.dart';
 import 'package:covid_tracker/routing/routes.dart';
 import 'package:covid_tracker/screens/drawer/drawer_default.dart';
 import 'package:covid_tracker/utils/render_image.dart';
@@ -13,6 +14,7 @@ class SideDrawerController {
   var activeColor = CommonColors.moderateCyan;
   var inactiveColor = CommonColors.watermelon;
   BuildContext drawerContext;
+  User user;
   // renderProfileSection() {
   //   // var profilePic = utilities.getStringPreference('profilePic') != null &&
   //   //         utilities.getStringPreference('profilePic') != ''
@@ -217,7 +219,8 @@ class SideDrawerController {
     // } else {
     //   drawerData = jsonObj[AgentType.BOUCE_AGENT];
     // }
-    drawerData = jsonObj['user'];
+    drawerData =
+        user != null && user.isAdmin ? jsonObj['admin'] : jsonObj['user'];
     drawerData['drawer'].forEach((item) {
       getWidgets(item);
     });
@@ -243,9 +246,20 @@ class SideDrawerController {
                 .pushNamed(Routes.healthCheckerScreenRoute));
         break;
       case 'ADD_CONTACT':
-        widgetToAdd = widgetToAdd = drawerListTile('', 'Add Visited People',
+        widgetToAdd = widgetToAdd = drawerListTile('', 'Update Contact Log',
             onPressed: () => Navigator.of(drawerContext)
                 .pushNamed(Routes.addContactPersonRoute));
+        break;
+      case 'VIEW_VISITED_PEOPLE':
+        widgetToAdd = widgetToAdd = drawerListTile('', 'View Contact Log',
+            onPressed: () => Navigator.of(drawerContext).pushNamed(
+                '${Routes.viewContactPersons}/${user.id}',
+                arguments: {"userId": user.id}));
+        break;
+      case 'VIEW_MAP_SCREEN':
+        widgetToAdd = widgetToAdd = drawerListTile('', 'View Map',
+            onPressed: () =>
+                Navigator.of(drawerContext).pushNamed(Routes.mapScreen));
         break;
       case 'TRACKER_HOME':
         widgetToAdd = widgetToAdd = drawerListTile('', 'Tracker Home',

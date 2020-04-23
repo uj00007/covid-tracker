@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:covid_tracker/colors/colors.dart';
+import 'package:covid_tracker/models/user.dart';
 import 'package:covid_tracker/screens/drawer/drawer_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:hawkeye_app/screens/drawer/drawer_controller.dart';
 
 class DrawerWidget extends StatefulWidget {
@@ -15,6 +19,24 @@ class _DrawerWidgetState extends State<DrawerWidget> {
   bool switchEvent;
   // SharedPreferenceService utilities = locator<SharedPreferenceService>();
   SideDrawerController _drawerController = SideDrawerController();
+
+  @override
+  void initState() {
+    super.initState();
+    getUser();
+  }
+
+  getUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    //Return String
+    String stringValue = prefs.getString('user');
+    print(stringValue);
+    if (stringValue != null) {
+      _drawerController.user = User.fromJson(json.decode(stringValue), '');
+      // _drawerController.widgetBuilder();
+      this.setState(() {});
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,23 +59,77 @@ class _DrawerWidgetState extends State<DrawerWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           direction: Axis.vertical,
           children: <Widget>[
-            Expanded(
-              flex: 3,
-              child: Container(
-                decoration: BoxDecoration(
-                    color: CommonColors.tilePurple,
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(16),
-                    )),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Container(
-                        // height: 200,
-                        )
-                  ],
-                ),
-              ),
+            // Expanded(
+            //   flex: 3,
+            //   child: Container(
+            //     decoration: BoxDecoration(
+            //         color: CommonColors.tilePurple,
+            //         borderRadius: BorderRadius.only(
+            //           topRight: Radius.circular(16),
+            //         )),
+            //     child: Column(
+            //       mainAxisAlignment: MainAxisAlignment.center,
+            //       children: <Widget>[
+            //         Container(
+            //           // height: 200,
+            //           child: Image.asset(
+            //             'assets/images/splash.png',
+            //             alignment: Alignment.center,
+            //             fit: BoxFit.fitWidth,
+            //             // height: 100,
+            //             // width: 100,
+            //             scale: 20,
+            //           ),
+            //         )
+            //       ],
+            //     ),
+            //   ),
+            // ),
+            Column(
+              children: <Widget>[
+                Container(
+                    child: Image.asset(
+                  'assets/images/splash.png',
+                  alignment: Alignment.center,
+                  // fit: BoxFit.contain,
+                  // height: 100,
+                  width: MediaQuery.of(context).size.width,
+                  // scale: 20,
+                )),
+                _drawerController.user != null
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Icon(
+                              Icons.person,
+                              color: CommonColors.grey,
+                            ),
+                          ),
+                          Column(
+                            children: <Widget>[
+                              Text(
+                                _drawerController.user.name,
+                                style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400),
+                              ),
+                              Text(
+                                _drawerController.user.emailId,
+                                style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400),
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
+                    : SizedBox()
+              ],
             ),
             Expanded(
               flex: 11,
@@ -64,7 +140,9 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   topRight: Radius.circular(22),
                   bottomRight: Radius.circular(22),
                 )),
-                child: Flex(
+                child:
+                    //  Container()
+                    Flex(
                   direction: Axis.vertical,
                   children: <Widget>[
                     ..._drawerController.drawersectionwidgets,
@@ -79,16 +157,18 @@ class _DrawerWidgetState extends State<DrawerWidget> {
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      'Developed & Supported By:',
+                      '',
                       style: TextStyle(
-                          color: CommonColors.grey,
+                          color: Colors.white70,
                           fontSize: 16,
                           fontWeight: FontWeight.w400),
                     ),
                     Text(
-                      'Ujjwal Goyal   /   9650377543',
+                      '',
                       style: TextStyle(
                           color: CommonColors.grey,
                           fontSize: 16,
