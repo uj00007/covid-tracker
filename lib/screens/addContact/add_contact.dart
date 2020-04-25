@@ -178,14 +178,14 @@ class _AddContactScreenState extends State<AddContactScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Container(
-                height: MediaQuery.of(context).size.height - 300,
+                height: MediaQuery.of(context).size.height - 400,
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 24.0),
                     child: Card(
                       child: Container(
                           width: MediaQuery.of(context).size.width / 1.2,
-                          height: 400,
+                          height: 350,
                           padding: EdgeInsets.all(16),
                           child: Form(
                             key: _formKey,
@@ -247,6 +247,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
                                       labelText: 'Mobile Number',
                                     ),
                                     onSaved: (String value) {
+                                      print('accc');
                                       _mobileNumber = value;
                                     },
                                     // validator: (value) {
@@ -259,36 +260,34 @@ class _AddContactScreenState extends State<AddContactScreen> {
                                     // },
                                   ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: <Widget>[
-                                      Padding(
-                                        padding: const EdgeInsets.all(20.0),
-                                        child: Text(
-                                          _image == null
-                                              ? 'Take a pic'
-                                              : 'image taken successfully',
-                                          style: TextStyle(
-                                              color: CommonColors.grey68),
-                                        ),
-                                      ),
-                                      FloatingActionButton(
-                                        onPressed: () => _image == null
-                                            ? getImage()
-                                            : print("Already taken"),
-                                        backgroundColor: Colors.red,
-                                        child: Icon(Icons.add_a_photo),
-                                      )
-                                    ],
-                                  ),
-                                ),
                               ],
                             ),
                           )),
                     ),
                   ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Text(
+                        _image == null
+                            ? 'Take a pic'
+                            : 'image taken successfully',
+                        style: TextStyle(color: CommonColors.white),
+                      ),
+                    ),
+                    FloatingActionButton(
+                      onPressed: () =>
+                          _image == null ? getImage() : print("Already taken"),
+                      backgroundColor: Colors.red,
+                      child: Icon(Icons.add_a_photo),
+                    )
+                  ],
                 ),
               ),
               Padding(

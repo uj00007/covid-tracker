@@ -6,6 +6,8 @@ import 'package:covid_tracker/screens/homescreen/homescreen.dart';
 import 'package:covid_tracker/screens/login/login.dart';
 import 'package:covid_tracker/screens/map_screen.dart';
 import 'package:covid_tracker/screens/splash/splash.dart';
+import 'package:covid_tracker/screens/stateView/state_view_screen.dart';
+import 'package:covid_tracker/screens/userLocationMapScreen/userLocationMapScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
 
@@ -28,12 +30,21 @@ class FluroRouter {
   static Handler _loginScreenHandler = Handler(
       handlerFunc: (BuildContext context, Map<String, dynamic> params) =>
           LoginScreen());
+  static Handler _stateViseViewScreen = Handler(
+      handlerFunc: (BuildContext context, Map<String, dynamic> params) =>
+          StateViseView());
   static Handler _addContactScreenHandler = Handler(
       handlerFunc: (BuildContext context, Map<String, dynamic> params) =>
           AddContactScreen());
   static Handler _viewContactPersonScreenHandler =
       Handler(handlerFunc: (BuildContext context, Map<String, dynamic> params) {
     return ViewContactPersonsScreen(
+      userId: params['id'][0],
+    );
+  });
+  static Handler _userLocationMapViewHandler =
+      Handler(handlerFunc: (BuildContext context, Map<String, dynamic> params) {
+    return UserLocationMapScreen(
       userId: params['id'][0],
     );
   });
@@ -66,6 +77,14 @@ class FluroRouter {
     router.define(
       Routes.mapScreen,
       handler: _mapScreen,
+    );
+    router.define(
+      Routes.stateviseview,
+      handler: _stateViseViewScreen,
+    );
+    router.define(
+      '${Routes.userLocationMapView}/:id',
+      handler: _userLocationMapViewHandler,
     );
     router.define(Routes.splashRoute, handler: _splashScreenHandler);
   }

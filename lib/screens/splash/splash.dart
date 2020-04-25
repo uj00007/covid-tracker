@@ -121,8 +121,20 @@ class _SplashScreenState extends State<SplashScreen> {
             apiKey: '614988993013',
             databaseURL: 'https://covid-tracker-85a72.firebaseio.com'));
     database = FirebaseDatabase(app: app);
+    // updatedb();
     getUserFromDB(id);
   }
+
+  // updatedb() {
+  //   database.reference().child('users').once().then((DataSnapshot snapshot) {
+  //     // print('value ${snapshot.value}');
+  //     if (snapshot.value != null) {
+  //       for (var i = 0; i < snapshot.value.length; i++) {
+  //         database.reference().child('users/${i}/id').set(i.toString());
+  //       }
+  //     }
+  //   });
+  // }
 
   addUserToStorage(user, id) async {
     user["id"] = id;

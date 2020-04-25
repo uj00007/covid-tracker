@@ -261,6 +261,11 @@ class SideDrawerController {
             onPressed: () =>
                 Navigator.of(drawerContext).pushNamed(Routes.mapScreen));
         break;
+      case 'STATE_VISE_VIEW':
+        widgetToAdd = widgetToAdd = drawerListTile('', 'View State Vise Info',
+            onPressed: () =>
+                Navigator.of(drawerContext).pushNamed(Routes.stateviseview));
+        break;
       case 'TRACKER_HOME':
         widgetToAdd = widgetToAdd = drawerListTile('', 'Tracker Home',
             onPressed: () =>

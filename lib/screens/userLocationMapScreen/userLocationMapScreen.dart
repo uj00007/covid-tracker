@@ -2,10 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:covid_tracker/colors/colors.dart';
-import 'package:covid_tracker/components/custom_button.dart';
-import 'package:covid_tracker/components/flashing_button.dart';
 import 'package:covid_tracker/models/user.dart';
-import 'package:covid_tracker/utils/exter_link_launcher.dart';
 import 'package:covid_tracker/utils/group_codes.dart';
 import 'package:covid_tracker/utils/map_style_json.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -16,13 +13,15 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class MapScreen extends StatefulWidget {
-  const MapScreen({@required Key key}) : super(key: key);
+class UserLocationMapScreen extends StatefulWidget {
+  final userId;
+
+  const UserLocationMapScreen({Key key, this.userId}) : super(key: key);
   @override
-  _MapScreenState createState() => _MapScreenState();
+  _UserLocationMapScreenState createState() => _UserLocationMapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _UserLocationMapScreenState extends State<UserLocationMapScreen> {
   Completer<GoogleMapController> _controller = Completer();
   List<Marker> markers = [];
   List<Circle> circles = [];
@@ -100,34 +99,33 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   _getCurrentLocation() {
-    final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
+    // final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
+    getUser();
 
-    geolocator
-        .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
-        .then((Position position) {
-      this.setState(() {
-        _currentPosition = position;
-        _pos = CameraPosition(
-            target: LatLng(position.latitude, position.longitude), zoom: 11);
-        self = Marker(
-            infoWindow: InfoWindow(title: 'You'),
-            markerId: MarkerId('You'),
-            draggable: false,
-            onTap: () => print('tapped'),
-            position: LatLng(position.latitude, position.longitude));
-      });
-      print(_currentPosition);
-      print('current location done');
+    // geolocator
+    //     .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+    //     .then((Position position) {
+    //   this.setState(() {
+    //     _currentPosition = position;
 
-      getUser();
-    }).catchError((e) {
-      this.setState(() {
-        _pos = CameraPosition(target: LatLng(12.897489, 78.34058), zoom: 11);
-      });
-      getUser();
+    //     self = Marker(
+    //         infoWindow: InfoWindow(title: 'You'),
+    //         markerId: MarkerId('You'),
+    //         draggable: false,
+    //         onTap: () => print('tapped'),
+    //         position: LatLng(position.latitude, position.longitude));
+    //   });
+    //   print(_currentPosition);
+    //   print('current location done');
 
-      print(e);
-    });
+    // }).catchError((e) {
+    //   this.setState(() {
+    //     _pos = CameraPosition(target: LatLng(12.897489, 78.34058), zoom: 11);
+    //   });
+    //   getUser();
+
+    //   print(e);
+    // });
   }
 
   getHotspots() {
@@ -219,9 +217,10 @@ class _MapScreenState extends State<MapScreen> {
     print('set user markers start');
 
     List<Marker> markerstemp = this.self != null ? [self] : [];
+    CameraPosition temppos = null;
     for (var user in this.users) {
       // print(user);
-      if (user['location'] != null) {
+      if (user['location'] != null && user["id"] == widget.userId) {
         var userCode = user['group_code'] != null ? user['group_code'] : '100';
         print(double.parse(this.groupCodes[userCode] != null
             ? this.groupCodes[userCode]['hue_code'].toString()
@@ -241,12 +240,18 @@ class _MapScreenState extends State<MapScreen> {
             onTap: () => print('tapped'),
             position: LatLng(
                 user['location']['latitude'], user['location']['longitude'])));
+        temppos = CameraPosition(
+            target: LatLng(
+                user['location']['latitude'], user['location']['longitude']),
+            zoom: 11);
+        break;
       }
     }
     print('user markers setting done done');
 
     this.setState(() {
       this.markers = markerstemp;
+      _pos = temppos;
     });
   }
 
@@ -304,19 +309,9 @@ class _MapScreenState extends State<MapScreen> {
         backgroundColor: Color(0xff2c4260),
         elevation: 0.0,
         title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Text('CovidTracker-Admin'),
-            FlashingButton(
-              onPressed: () => ExternalLink.launchURL(),
-              label: 'Live Cases',
-              height: 40,
-              multiTap: true,
-              disabled: false,
-              width: 100,
-              color: Colors.white,
-              style: TextStyle(color: CommonColors.blueGrey, fontSize: 16),
-            ),
+            Text('User Location'),
           ],
         ),
       ),

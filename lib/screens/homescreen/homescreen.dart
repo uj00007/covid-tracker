@@ -26,6 +26,7 @@ import 'package:http/io_client.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geocoder/geocoder.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({Key key}) : super(key: key);
@@ -53,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
   RemoteConfig remoteConfig;
   var hotspotData = {};
   String zone = 'blue';
+  String currState;
 
   @override
   void initState() {
@@ -220,9 +222,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
     geolocator
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
-        .then((Position position) {
+        .then((Position position) async {
+      var addresses = await Geocoder.local.findAddressesFromCoordinates(
+          Coordinates(position.latitude, position.longitude));
+      print('looking up');
+      print(addresses[0].adminArea);
+
       setState(() {
         _currentPosition = position;
+        currState = addresses[0].adminArea;
       });
       print(_currentPosition);
       database.reference().child('users/${user.id}/location').set(
@@ -289,6 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
           double.parse(hotspot['distance']) <=
               this.hotspotData['hotspot_mid_distance']) {
         this.zone = 'yellow';
+        break;
       } else {
         this.zone = 'blue';
       }
@@ -323,6 +332,12 @@ class _HomeScreenState extends State<HomeScreen> {
         .reference()
         .child('users/${user.id}/nearest_hotspot')
         .set(this.nearestHotspot);
+    database.reference().child('users/${user.id}/state').set(
+        this.currState != null
+            ? this.currState
+            : this.nearestHotspot["state"] != null
+                ? this.nearestHotspot["state"]
+                : '');
     database.reference().child('users/${user.id}/is_safe').set(false);
     database.reference().child('users/${user.id}/zone').set(this.zone);
     getApiRequest(
@@ -330,10 +345,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   updateDBOfUserSafe() {
-    database
-        .reference()
-        .child('users/${user.id}/nearest_hotspot')
-        .set(this.nearestHotspot);
+    if (this.nearesthotspots.length > 0) {
+      database
+          .reference()
+          .child('users/${user.id}/nearest_hotspot')
+          .set(this.nearesthotspots[0]);
+      database.reference().child('users/${user.id}/state').set(
+          this.currState != null
+              ? this.currState
+              : this.nearesthotspots[0]["state"] != null
+                  ? this.nearesthotspots[0]["state"]
+                  : '');
+    }
     database.reference().child('users/${user.id}/is_safe').set(true);
     database.reference().child('users/${user.id}/zone').set(this.zone);
   }
