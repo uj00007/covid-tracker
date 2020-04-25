@@ -8,4 +8,6 @@ class Routes {
   static final String addContactPersonRoute = 'addcontactperson';
   static final String viewContactPersons = 'viewcontactpersons';
   static final String mapScreen = 'mapscreen';
+  static final String stateviseview = 'stateviseview';
+  static final String userLocationMapView = 'userlocationmapview';
 }

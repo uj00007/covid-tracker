@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:covid_tracker/colors/colors.dart';
 import 'package:covid_tracker/models/user.dart';
+import 'package:covid_tracker/routing/routes.dart';
 import 'package:covid_tracker/screens/drawer/drawer_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,6 +37,12 @@ class _DrawerWidgetState extends State<DrawerWidget> {
       // _drawerController.widgetBuilder();
       this.setState(() {});
     }
+  }
+
+  logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+    Navigator.of(context).pushNamed(Routes.loginRoute);
   }
 
   @override
@@ -160,6 +167,20 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
+                    InkWell(
+                      onTap: () => logout(),
+                      child: Container(
+                        child: Center(
+                          child: Text(
+                            'Logout',
+                            style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400),
+                          ),
+                        ),
+                      ),
+                    ),
                     Text(
                       '',
                       style: TextStyle(

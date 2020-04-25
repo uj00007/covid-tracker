@@ -29,6 +29,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int yellowCount = 0;
   bool isLoading = true;
   User user;
+  String _name = "";
+  Map userMap = {};
+  String selectedSorting = "all";
 
   @override
   void initState() {
@@ -93,12 +96,30 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
   getCounts() {
     var blue = 0, red = 0, yellow = 0;
+    this.userMap['all'] = [];
+    this.userMap['blue'] = [];
+
+    this.userMap['yellow'] = [];
+
+    this.userMap['red'] = [];
+
     for (int i = 0; i < this.users.length; i++) {
       this.users[i]["zone"] != null
           ? this.users[i]["zone"] == 'blue'
               ? blue += 1
               : this.users[i]["zone"] == 'yellow' ? yellow += 1 : red += 1
           : this.users[i]["is_safe"] ? blue += 1 : red += 1;
+
+      this.userMap['all'].add(this.users[i]);
+      this.users[i]["zone"] != null
+          ? this.users[i]["zone"] == 'blue'
+              ? this.userMap['blue'].add(this.users[i])
+              : this.users[i]["zone"] == 'yellow'
+                  ? this.userMap['yellow'].add(this.users[i])
+                  : this.userMap['red'].add(this.users[i])
+          : this.users[i]["is_safe"]
+              ? this.userMap['blue'].add(this.users[i])
+              : this.userMap['red'].add(this.users[i]);
     }
     this.setState(() {
       this.blueCount = blue;
@@ -108,74 +129,106 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   }
 
   List<Widget> getCards() {
+    // print('calleddd cards');
     List<Widget> widgets = [];
-    for (int i = 0; i < this.users.length; i++) {
+    List tempList = userMap[this.selectedSorting];
+    for (int i = 0; i < userMap[this.selectedSorting].length; i++) {
       var msg = '';
-      msg = this.users[i]["zone"] != null
-          ? this.users[i]["zone"] == 'blue'
+      msg = tempList[i]["zone"] != null
+          ? tempList[i]["zone"] == 'blue'
               ? 'SAFE'
-              : this.users[i]["zone"] == 'yellow' ? 'CAUTION' : 'UNSAFE!!'
-          : this.users[i]["is_safe"] ? 'SAFE' : 'UNSAFE!!';
-
-      widgets.add(Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: InkWell(
-          onTap: () => Navigator.of(context).pushNamed(
-              '${Routes.viewContactPersons}/${i}',
-              arguments: {"userId": i}),
-          child: Card(
-              color: this.users[i]["zone"] != null
-                  ? this.users[i]["zone"] == 'blue'
-                      ? Colors.blue
-                      : this.users[i]["zone"] == 'yellow'
-                          ? Colors.yellow
-                          : Colors.red
-                  : this.users[i]["is_safe"] ? Colors.blue : Colors.red,
-              child: Container(
-                  // height: 100,
-                  padding: EdgeInsets.all(16),
-                  width: MediaQuery.of(context).size.width,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Text(users[i]["name"],
+              : tempList[i]["zone"] == 'yellow' ? 'CAUTION' : 'UNSAFE!!'
+          : tempList[i]["is_safe"] ? 'SAFE' : 'UNSAFE!!';
+      // print(tempList[i]);
+      if (tempList[i]["mobile_number"].startsWith(this._name))
+        widgets.add(Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: InkWell(
+            onTap: () => Navigator.of(context).pushNamed(
+                '${Routes.viewContactPersons}/${int.parse(tempList[i]["id"].toString())}',
+                arguments: {"userId": i}),
+            child: Card(
+                color: tempList[i]["zone"] != null
+                    ? tempList[i]["zone"] == 'blue'
+                        ? Colors.blue
+                        : tempList[i]["zone"] == 'yellow'
+                            ? Colors.yellow
+                            : Colors.red
+                    : tempList[i]["is_safe"] ? Colors.blue : Colors.red,
+                child: Container(
+                    // height: 100,
+                    padding: EdgeInsets.all(16),
+                    width: MediaQuery.of(context).size.width,
+                    child: Column(
+                      children: <Widget>[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Text(
+                                    tempList[i]["name"] != null
+                                        ? tempList[i]["name"]
+                                        : '',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        letterSpacing: 1,
+                                        fontWeight: FontWeight.w600)),
+                                Text('Mob: ${tempList[i]["mobile_number"]}',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        letterSpacing: 1,
+                                        fontWeight: FontWeight.normal)),
+                                Text(
+                                    tempList[i]["email_id"] != null
+                                        ? tempList[i]["email_id"]
+                                        : '',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        letterSpacing: 1,
+                                        fontWeight: FontWeight.normal)),
+                              ],
+                            ),
+                            Container(
+                                child: Text(
+                              msg,
                               style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 20,
+                                  fontSize: 30,
                                   letterSpacing: 1,
-                                  fontWeight: FontWeight.w600)),
-                          Text('Mob: ${users[i]["mobile_number"]}',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  letterSpacing: 1,
-                                  fontWeight: FontWeight.normal)),
-                          Text(users[i]["email_id"],
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  letterSpacing: 1,
-                                  fontWeight: FontWeight.normal)),
-                        ],
-                      ),
-                      Container(
-                          child: Text(
-                        msg,
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 30,
-                            letterSpacing: 1,
-                            fontWeight: FontWeight.w600),
-                      ))
-                    ],
-                  ))),
-        ),
-      ));
+                                  fontWeight: FontWeight.w600),
+                            ))
+                          ],
+                        ),
+                        tempList[i]['location'] != null
+                            ? InkWell(
+                                onTap: () => Navigator.of(context).pushNamed(
+                                    '${Routes.userLocationMapView}/${int.parse(tempList[i]["id"].toString())}',
+                                    arguments: {"userId": i}),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: <Widget>[
+                                      Text('See Location'),
+                                      Container(child: Icon(Icons.place)),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            : SizedBox()
+                      ],
+                    ))),
+          ),
+        ));
     }
 
     return widgets;
@@ -255,49 +308,111 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: <Widget>[
-                                Card(
-                                  child: Container(
-                                    height: 60,
-                                    width: 60,
-                                    color: Colors.blue,
-                                    alignment: Alignment.center,
-                                    child: Text(this.blueCount.toString(),
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold)),
+                                InkWell(
+                                  onTap: () {
+                                    // print('called');
+                                    this.setState(() {
+                                      if (this.selectedSorting != "blue")
+                                        this.selectedSorting = "blue";
+                                      else
+                                        this.selectedSorting = "all";
+                                    });
+                                  },
+                                  child: Card(
+                                    child: Container(
+                                      height: 60,
+                                      width: 60,
+                                      color: Colors.blue,
+                                      alignment: Alignment.center,
+                                      child: Text(this.blueCount.toString(),
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold)),
+                                    ),
                                   ),
                                 ),
-                                Card(
-                                  child: Container(
-                                    height: 60,
-                                    width: 60,
-                                    color: Colors.yellow,
-                                    alignment: Alignment.center,
-                                    child: Text(this.yellowCount.toString(),
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold)),
+                                InkWell(
+                                  onTap: () => this.setState(() {
+                                    if (this.selectedSorting != "yellow")
+                                      this.selectedSorting = "yellow";
+                                    else
+                                      this.selectedSorting = "all";
+                                  }),
+                                  child: Card(
+                                    child: Container(
+                                      height: 60,
+                                      width: 60,
+                                      color: Colors.yellow,
+                                      alignment: Alignment.center,
+                                      child: Text(this.yellowCount.toString(),
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold)),
+                                    ),
                                   ),
                                 ),
-                                Card(
-                                  child: Container(
-                                    height: 60,
-                                    width: 60,
-                                    color: Colors.red,
-                                    alignment: Alignment.center,
-                                    child: Text(this.redCount.toString(),
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold)),
+                                InkWell(
+                                  onTap: () => this.setState(() {
+                                    if (this.selectedSorting != "red")
+                                      this.selectedSorting = "red";
+                                    else
+                                      this.selectedSorting = "all";
+                                  }),
+                                  child: Card(
+                                    child: Container(
+                                      height: 60,
+                                      width: 60,
+                                      color: Colors.red,
+                                      alignment: Alignment.center,
+                                      child: Text(this.redCount.toString(),
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold)),
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           )
                         ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextFormField(
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
+                        decoration: const InputDecoration(
+                          icon: Icon(Icons.search),
+                          // labelStyle: TextStyle(color: Colors.white),
+                          hintText: 'Search by mobile number',
+                          labelText: 'Search',
+                        ),
+                        onEditingComplete: () {
+                          // print(this._name);
+
+                          FocusScope.of(context).requestFocus(new FocusNode());
+
+                          this.setState(() {
+                            this._name = this._name;
+                          });
+                        },
+                        onChanged: (value) {
+                          _name = value;
+                        },
+                        onSaved: (String value) {
+                          _name = value;
+                        },
+                        validator: (value) {
+                          if (value.isEmpty) {
+                            return 'Please enter some text';
+                          }
+                          return null;
+                        },
                       ),
                     ),
                     ...getCards()

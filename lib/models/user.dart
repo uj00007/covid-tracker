@@ -91,6 +91,7 @@ class User {
   }
 
   Map<String, dynamic> toJson() => {
+        "id": this.id,
         "name": this.name,
         "state": this.state,
         "token": this.token,
