@@ -5,8 +5,10 @@ import 'package:covid_tracker/routing/routes.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:package_info/package_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -21,10 +23,62 @@ class _SplashScreenState extends State<SplashScreen> {
   String fcmtoken;
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  bool versionMismatch = false;
+
+  RemoteConfig remoteConfig;
+  var versionData = {};
+
   @override
   void initState() {
     super.initState();
-    notificationConfigurationSetter();
+
+    versionData = {
+      'forced_update': false,
+    };
+    getVersionData().then((res) {
+      setState(() {
+        this.versionData = res;
+      });
+      if (!res['forced_update']) notificationConfigurationSetter();
+    });
+  }
+
+  Future<bool> compareAppVersion(String versionCode) async {
+    PackageInfo info = await PackageInfo.fromPlatform();
+    print('versionCode: $versionCode');
+    print('buildNumber: ${info.buildNumber}');
+    if (int.parse(versionCode) > int.parse(info.buildNumber))
+      versionMismatch = true;
+    print(versionMismatch);
+    return versionMismatch;
+  }
+
+  Future<Map> getVersionData() async {
+    //basically fetching from remote config
+    bool forcedUpdate = false;
+    String version = '0';
+    remoteConfig = await RemoteConfig.instance;
+    try {
+      await remoteConfig.fetch(expiration: const Duration(hours: 0));
+      await remoteConfig.activateFetched();
+      version = remoteConfig.getString('version_code');
+      // halertdistance = remoteConfig.getInt('hotspot_alert_distance');
+      // hmiddistance = remoteConfig.getInt('hotspot_mid_distance');
+      // count = remoteConfig.getInt('hotspots_to_show');
+      forcedUpdate = remoteConfig.getBool('forced_update');
+      if (await compareAppVersion(version) && forcedUpdate) {
+        forcedUpdate = true;
+      } else {
+        forcedUpdate = false;
+      }
+    } on FetchThrottledException catch (exception) {
+      // Fetch throttled.
+      print(exception);
+    } catch (exception) {
+      print('Unable to fetch remote config. Cached or default values will be '
+          'used');
+    }
+    return {'forced_update': forcedUpdate};
   }
 
   void notificationConfigurationSetter() {
@@ -182,18 +236,26 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        height: MediaQuery.of(context).size.height,
-        color: Color(0xff123448),
-        child: Image.asset(
-          'assets/images/splash.png',
-          alignment: Alignment.center,
-          fit: BoxFit.contain,
-          // height: 100,
-          // width: 100,
-          scale: 20,
-        ),
-      ),
+      backgroundColor: Color(0xff123448),
+      body: !this.versionData["forced_update"]
+          ? Container(
+              height: MediaQuery.of(context).size.height,
+              color: Color(0xff123448),
+              child: Image.asset(
+                'assets/images/splash.png',
+                alignment: Alignment.center,
+                fit: BoxFit.contain,
+                // height: 100,
+                // width: 100,
+                scale: 20,
+              ),
+            )
+          : Center(
+              child: Text(
+                "Please Install Latest Version of the app",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
     );
   }
 }

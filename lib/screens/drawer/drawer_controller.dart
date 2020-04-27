@@ -154,11 +154,16 @@ class SideDrawerController {
         child: ListTile(
           leading: Container(
               padding: EdgeInsets.only(left: 10),
-              child: renderAssetSvg(
-                imageLink,
-                height: 22,
-                width: 22,
-              )),
+              child: imageLink != ""
+                  ? renderAssetSvg(
+                      imageLink,
+                      height: 22,
+                      width: 22,
+                    )
+                  : Icon(
+                      Icons.album,
+                      color: Colors.white,
+                    )),
           title: Text(
             tileText,
             style: TextStyle(
@@ -262,7 +267,7 @@ class SideDrawerController {
                 Navigator.of(drawerContext).pushNamed(Routes.mapScreen));
         break;
       case 'STATE_VISE_VIEW':
-        widgetToAdd = widgetToAdd = drawerListTile('', 'View State Vise Info',
+        widgetToAdd = widgetToAdd = drawerListTile('', 'View State Wise Info',
             onPressed: () =>
                 Navigator.of(drawerContext).pushNamed(Routes.stateviseview));
         break;

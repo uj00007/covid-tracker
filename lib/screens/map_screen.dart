@@ -226,11 +226,15 @@ class _MapScreenState extends State<MapScreen> {
         print(double.parse(this.groupCodes[userCode] != null
             ? this.groupCodes[userCode]['hue_code'].toString()
             : '2.0'));
+        print(user['name']);
+        print(user['nearest_hotspot']);
         markerstemp.add(Marker(
             infoWindow: InfoWindow(
                 title: user['name'],
-                snippet: user['nearest_hotspot'] != null
-                    ? "${double.parse(user['nearest_hotspot']['distance'].toString()) < 0 ? '0' : double.parse(user['nearest_hotspot']['distance'].toString()).toString()} Kms"
+                snippet: user['nearest_hotspot'] != null &&
+                        user['nearest_hotspot']['distance'] != null &&
+                        user['group_code'] != null
+                    ? "${double.parse(user['nearest_hotspot']['distance'].toString()) < 0 ? '0' : double.parse(user['nearest_hotspot']['distance'].toString()).toString()} Kms; Group: ${user['group_code'].toString()}"
                     : ''),
             icon: BitmapDescriptor.defaultMarkerWithHue(double.parse(
                 this.groupCodes[userCode] != null

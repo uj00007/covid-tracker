@@ -161,6 +161,18 @@ class _AddContactScreenState extends State<AddContactScreen> {
     _formKey.currentState.reset();
   }
 
+  checkUserInDB() {
+    database
+        .reference()
+        .child('users/${user.id}')
+        .once()
+        .then((DataSnapshot snapshot) {
+      if (snapshot.value != null) {
+        updateUser();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -304,7 +316,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
                       _formKey.currentState.save();
 
                       print(_name);
-                      updateUser();
+                      checkUserInDB();
                     }
                   },
                 ),

@@ -14,10 +14,15 @@ class StateViseView extends StatefulWidget {
 
 class _StateViseViewState extends State<StateViseView> {
   String dropdownValue = 'All';
+  String dropdownValue2 = 'State_Wise';
+  List<String> values = ['All'];
+
   FirebaseApp app;
   FirebaseDatabase database;
   List users = [];
   Map stateMap = {'All': {}};
+  Map groupMap = {'All': {}};
+
   User userAdmim;
 
   @override
@@ -63,6 +68,8 @@ class _StateViseViewState extends State<StateViseView> {
   createStateMap() {
     var temp = {};
     var tempAll = {};
+    var tempGrp = {};
+    var tempAllGrp = {};
     for (var user in this.users) {
       if ((!this.userAdmim.isSuperAdmin &&
               this.userAdmim.groupCode == user["group_code"]) ||
@@ -88,6 +95,18 @@ class _StateViseViewState extends State<StateViseView> {
           tempAll[grp][zone] = 1;
         }
 
+        if (tempAllGrp.containsKey(state)) {
+          tempAllGrp[state]["total"] = tempAllGrp[state]["total"] + 1;
+          if (tempAllGrp[state].containsKey(zone)) {
+            tempAllGrp[state][zone] = tempAllGrp[state][zone] + 1;
+          } else {
+            tempAllGrp[state][zone] = 1;
+          }
+        } else {
+          tempAllGrp[state] = {"total": 1};
+          tempAllGrp[state][zone] = 1;
+        }
+
         if (grp != '' && grp != null && state != null) {
           if (temp.containsKey(state)) {
             if (temp[state].containsKey(grp)) {
@@ -107,18 +126,43 @@ class _StateViseViewState extends State<StateViseView> {
             temp[state][grp][zone] = 1;
           }
         }
+
+        if (grp != '' && grp != null && state != null && state != '') {
+          if (tempGrp.containsKey(grp)) {
+            if (tempGrp[grp].containsKey(state)) {
+              tempGrp[grp][state]['total'] = tempGrp[grp][state]['total'] + 1;
+              if (tempGrp[grp][state].containsKey(zone)) {
+                tempGrp[grp][state][zone] = tempGrp[grp][state][zone] + 1;
+              } else {
+                tempGrp[grp][state][zone] = 1;
+              }
+            } else {
+              tempGrp[grp][state] = {"total": 1};
+              tempGrp[grp][state][zone] = 1;
+            }
+          } else {
+            tempGrp[grp] = {};
+            tempGrp[grp][state] = {"total": 1};
+            tempGrp[grp][state][zone] = 1;
+          }
+        }
       }
     }
     print("state map");
     temp['All'] = tempAll;
+    tempGrp['All'] = tempAllGrp;
     print(temp);
     this.setState(() {
       this.stateMap = temp;
+      this.groupMap = tempGrp;
+      // this.values = this.dropdownValue2 == "State_Wise"
+      //     ? <String>[...stateMap.keys.toList()]
+      //     : <String>[...groupMap.keys.toList()];
     });
   }
 
   List<Widget> getGroupInfo() {
-    var statejson = this.stateMap[dropdownValue];
+    var statejson = this.groupMap[dropdownValue];
     List<Widget> widgets = [];
     widgets.add(Padding(
       padding: const EdgeInsets.all(24.0),
@@ -178,13 +222,19 @@ class _StateViseViewState extends State<StateViseView> {
                           width: 30,
                           color: Colors.blue,
                           alignment: Alignment.center,
+                          child: Text(
+                            statejson[key]['blue'] != null
+                                ? statejson[key]['blue'].toString()
+                                : '0',
+                            style: TextStyle(color: Colors.black, fontSize: 24),
+                          ),
                         )),
-                        Text(
-                          statejson[key]['blue'] != null
-                              ? statejson[key]['blue'].toString()
-                              : '0',
-                          style: TextStyle(color: Colors.white, fontSize: 24),
-                        ),
+                        // Text(
+                        //   statejson[key]['blue'] != null
+                        //       ? statejson[key]['blue'].toString()
+                        //       : '0',
+                        //   style: TextStyle(color: Colors.white, fontSize: 24),
+                        // ),
                       ],
                     ),
                     Padding(
@@ -197,13 +247,20 @@ class _StateViseViewState extends State<StateViseView> {
                             width: 30,
                             color: Colors.yellow,
                             alignment: Alignment.center,
+                            child: Text(
+                              statejson[key]['yellow'] != null
+                                  ? statejson[key]['yellow'].toString()
+                                  : '0',
+                              style:
+                                  TextStyle(color: Colors.black, fontSize: 24),
+                            ),
                           )),
-                          Text(
-                            statejson[key]['yellow'] != null
-                                ? statejson[key]['yellow'].toString()
-                                : '0',
-                            style: TextStyle(color: Colors.white, fontSize: 24),
-                          ),
+                          // Text(
+                          //   statejson[key]['yellow'] != null
+                          //       ? statejson[key]['yellow'].toString()
+                          //       : '0',
+                          //   style: TextStyle(color: Colors.white, fontSize: 24),
+                          // ),
                         ],
                       ),
                     ),
@@ -215,13 +272,19 @@ class _StateViseViewState extends State<StateViseView> {
                           width: 30,
                           color: Colors.red,
                           alignment: Alignment.center,
+                          child: Text(
+                            statejson[key]['red'] != null
+                                ? statejson[key]['red'].toString()
+                                : '0',
+                            style: TextStyle(color: Colors.black, fontSize: 24),
+                          ),
                         )),
-                        Text(
-                          statejson[key]['red'] != null
-                              ? statejson[key]['red'].toString()
-                              : '0',
-                          style: TextStyle(color: Colors.white, fontSize: 24),
-                        ),
+                        // Text(
+                        //   statejson[key]['red'] != null
+                        //       ? statejson[key]['red'].toString()
+                        //       : '0',
+                        //   style: TextStyle(color: Colors.white, fontSize: 24),
+                        // ),
                       ],
                     ),
                   ],
@@ -315,7 +378,7 @@ class _StateViseViewState extends State<StateViseView> {
                         dropdownValue = newValue;
                       });
                     },
-                    items: <String>[...stateMap.keys.toList()]
+                    items: <String>[...groupMap.keys.toList()]
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
@@ -323,6 +386,35 @@ class _StateViseViewState extends State<StateViseView> {
                       );
                     }).toList(),
                   ),
+                  // DropdownButton<String>(
+                  //   value: dropdownValue2,
+                  //   icon: Icon(
+                  //     Icons.arrow_downward,
+                  //     color: Colors.white,
+                  //   ),
+                  //   iconSize: 24,
+                  //   elevation: 16,
+                  //   style: TextStyle(color: Colors.red, fontSize: 20),
+                  //   underline: Container(
+                  //     height: 2,
+                  //     color: Colors.red,
+                  //   ),
+                  //   onChanged: (String newValue) {
+                  //     setState(() {
+                  //       dropdownValue2 = newValue;
+                  //       values = newValue == "State_Wise"
+                  //           ? <String>[...stateMap.keys.toList()]
+                  //           : <String>[...groupMap.keys.toList()];
+                  //     });
+                  //   },
+                  //   items: <String>['State_Wise', 'Group_Wise']
+                  //       .map<DropdownMenuItem<String>>((String value) {
+                  //     return DropdownMenuItem<String>(
+                  //       value: value,
+                  //       child: Center(child: Text(value)),
+                  //     );
+                  //   }).toList(),
+                  // ),
                 ],
               ),
               Container(

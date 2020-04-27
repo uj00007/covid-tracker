@@ -12,6 +12,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:package_info/package_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -29,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String _groupCode;
   String _email;
   int _age;
+  String version;
   String _token;
 
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
@@ -135,44 +137,46 @@ class _LoginScreenState extends State<LoginScreen> {
     // });
     database.reference().child('users').once().then((DataSnapshot snapshot) {
       print('value ${snapshot.value}');
-      rawUsers = snapshot.value;
+      this.rawUsers = snapshot.value;
     });
-    // database.reference().child('users').set([
-    //   {
-    //     "name": "Ujjwal Goyal",
-    //     "age": 25,
-    //     "mobile_number": "9650377543",
-    //     "state": "Karnataka",
-    //     "city": "Bengaluru",
-    //     "email_id": "uj00007@gmail.com",
-    //     "token": ""
-    //   }
-    // ]);
+    this.version = await getAppVersion();
+  }
+
+  Future<String> getAppVersion() async {
+    PackageInfo info = await PackageInfo.fromPlatform();
+    print('buildNumber: ${info.buildNumber}');
+    return info.version;
   }
 
   updateUsers() {
     User temp;
     List usersUpdated = [];
+    var tempJson;
     if (rawUsers != null) {
       for (var i = 0; i < rawUsers.length; i++) {
         if (rawUsers[i]["email_id"] == _email) {
           print(rawUsers[i]["in_contact_users"]);
           print(rawUsers[i]["in_contact_users"].runtimeType);
 
-          temp = User.fromJson(rawUsers[i], i.toString());
           rawUsers[i]["name"] = _name;
           rawUsers[i]["mobile_number"] = _mobileNumber;
           rawUsers[i]["group_code"] = _groupCode;
           rawUsers[i]["email_id"] = _email;
           rawUsers[i]["age"] = _age;
           rawUsers[i]["token"] = _token;
+          rawUsers[i]["version"] = this.version;
+
+          temp = User.fromJson(rawUsers[i], i.toString());
+          tempJson = rawUsers[i];
+          tempJson["version"] = this.version;
+
           break;
         }
       }
       usersUpdated = [...rawUsers];
     }
     if (temp != null) {
-      database.reference().child('users').set(usersUpdated);
+      database.reference().child('users/${temp.id}').set(tempJson);
       //set this temp to shared pref
 
     } else {
@@ -186,8 +190,9 @@ class _LoginScreenState extends State<LoginScreen> {
           token: _token);
       var user = temp.toJson();
       usersUpdated.add(user);
+      user["version"] = this.version;
       // print('usersUpdated');
-      database.reference().child('users').set(usersUpdated);
+      database.reference().child('users/${temp.id}').set(user);
     }
     addUserToStorage(temp.toJson(), temp.id);
     if (temp.isAdmin)

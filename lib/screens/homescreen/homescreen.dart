@@ -123,18 +123,6 @@ class _HomeScreenState extends State<HomeScreen> {
             apiKey: '614988993013',
             databaseURL: 'https://covid-tracker-85a72.firebaseio.com'));
     database = FirebaseDatabase(app: app);
-    // database.reference().child('hotspots').once().then((DataSnapshot snapshot) {
-    //   print('value ${snapshot.value[0]['name']}');
-    // });
-    // database.reference().child('users').push().set({
-    //   "name": "Ujjwal Goyal",
-    //   "age": 25,
-    //   "mobile_number": "9650377543",
-    //   "state": "Karnataka",
-    //   "city": "Bengaluru",
-    //   "email_id": "uj00007@gmail.com",
-    //   "token": ""
-    // });
     getUserInfo();
     _getHotspotData();
   }
@@ -465,6 +453,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return wid;
   }
 
+  checkUserInDB() {
+    database
+        .reference()
+        .child('users/${user.id}')
+        .once()
+        .then((DataSnapshot snapshot) {
+      if (snapshot.value != null) {
+        _getCurrentLocation();
+      }
+    });
+  }
+
   Widget makeTransactionsIcon() {
     const double width = 4.5;
     const double space = 3.5;
@@ -546,7 +546,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: <Widget>[
               InkWell(
-                onTap: () => _getCurrentLocation(),
+                onTap: () => checkUserInDB(),
                 child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 24.0),
                     child: Icon(
@@ -685,7 +685,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               //   hotspots = [];
                               // });
 
-                              _getCurrentLocation();
+                              checkUserInDB();
                             },
                           )
                         : SizedBox(),

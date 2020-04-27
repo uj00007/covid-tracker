@@ -5,6 +5,7 @@ import 'package:covid_tracker/models/user.dart';
 import 'package:covid_tracker/routing/routes.dart';
 import 'package:covid_tracker/screens/drawer/drawer_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info/package_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:hawkeye_app/screens/drawer/drawer_controller.dart';
 
@@ -20,11 +21,13 @@ class _DrawerWidgetState extends State<DrawerWidget> {
   bool switchEvent;
   // SharedPreferenceService utilities = locator<SharedPreferenceService>();
   SideDrawerController _drawerController = SideDrawerController();
+  String version = '';
 
   @override
   void initState() {
     super.initState();
     getUser();
+    compareAppVersion();
   }
 
   getUser() async {
@@ -43,6 +46,15 @@ class _DrawerWidgetState extends State<DrawerWidget> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.clear();
     Navigator.of(context).pushNamed(Routes.loginRoute);
+  }
+
+  compareAppVersion() async {
+    PackageInfo info = await PackageInfo.fromPlatform();
+    // print('versionCode: $versionCode');
+    // print('buildNumber: ${info.buildNumber}');
+    this.setState(() {
+      this.version = info.version;
+    });
   }
 
   @override
@@ -181,12 +193,15 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                         ),
                       ),
                     ),
-                    Text(
-                      '',
-                      style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'Version: ${this.version}',
+                        style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400),
+                      ),
                     ),
                     Text(
                       '',
