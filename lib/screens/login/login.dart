@@ -124,6 +124,8 @@ class _LoginScreenState extends State<LoginScreen> {
     _token = fcmtoken;
   }
 
+//TODO: shift the whole logic of creation / signup/ ;login of a user to backend cloud function(VERY IMPORTANT>>!!!!), then app would return the newly created user object or the existing one , which then would be saved in shared pref
+
   void setupdatabase() async {
     app = await FirebaseApp.configure(
         name: 'covid-tracker-85a72',

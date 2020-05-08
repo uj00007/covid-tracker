@@ -208,6 +208,8 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   getUserFromDB(id) {
+    //in splash screen only do this change
+    // TODO: instead of checking for id , get list of all users , iterate over them to check for email id to validate if user is present in db and maybe do this validation /updation only if fcm token is updated
     if (id != null) {
       database
           .reference()
